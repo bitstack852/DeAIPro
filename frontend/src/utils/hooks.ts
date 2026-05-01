@@ -11,7 +11,7 @@ export const useFilteredAndSortedSubnets = (
   sortDirection: "asc" | "desc" = "desc"
 ) => {
   return useMemo(() => {
-    let filtered = [...subnets];
+    let filtered = [...(Array.isArray(subnets) ? subnets : [])];
 
     // Apply category filter
     if (filters.category) {
