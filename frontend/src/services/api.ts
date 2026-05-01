@@ -5,10 +5,13 @@ import {
   ResearchArticle,
   Lesson,
   AccessRequest,
+  AdminStatusData,
 } from "../types";
 
 const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:8000/api";
+  import.meta.env.VITE_API_URL
+    ? `${import.meta.env.VITE_API_URL}/api`
+    : "http://localhost:8000/api";
 
 const DEFAULT_HEADERS = {
   "Content-Type": "application/json",
@@ -180,33 +183,24 @@ export const getSubnetsDetailed = async (
  */
 export const approveAccess = async (
   email: string,
-  token: string
-): Promise<{
-  success: boolean;
-  message: string;
-  uid: string;
-  reset_link: string;
-  expires_in_hours: number;
-}> => {
+  token: string,
+  extendHours?: number
+): Promise<{ status: string; message: string; data?: { email: string; approved_at: string; expires_at: string } }> => {
   const response = await fetch(`${API_BASE_URL}/admin/approve-access`, {
     method: "POST",
     headers: {
       ...DEFAULT_HEADERS,
       ...getAuthHeader(token),
     },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, extend_hours: extendHours }),
   });
   return handleResponse(response);
 };
 
 /**
- * Get admin status and system info (admin only)
+ * Get admin status — pending requests and counts (admin only)
  */
-export const getAdminStatus = async (token: string): Promise<{
-  admin: string;
-  cache_available: boolean;
-  timestamp: string;
-}> => {
+export const getAdminStatus = async (token: string): Promise<{ status: string; data: AdminStatusData }> => {
   const response = await fetch(`${API_BASE_URL}/admin/status`, {
     method: "GET",
     headers: {
