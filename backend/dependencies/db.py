@@ -39,7 +39,7 @@ class Database:
             # Initialize Beanie with all models
             await init_beanie(
                 database=self.client.deaipro,
-                models=[
+                document_models=[
                     Subnet,
                     SubnetNews,
                     TemporaryAccess,

@@ -51,24 +51,20 @@
 
 These must be fixed before any production deployment.
 
-### BUG-001 — Duplicate Route Definitions Override Real Implementations
-**File:** `backend/api/routes/public.py`  
-**Problem:** `/api/research` and `/api/lessons` are defined twice. The second definitions (stubs that return empty arrays) are registered last and therefore override the real implementations above them.  
-**Fix:** Delete the duplicate stub definitions at the bottom of `public.py`. The real implementations with pagination and MongoDB queries should be the only definitions.
+### ~~BUG-001 — Duplicate Route Definitions Override Real Implementations~~ ✅ FIXED 2026-05-01
+Deleted duplicate `get_research` and `get_lessons` stub functions from `backend/api/routes/public.py`. Both endpoints now return paginated real MongoDB data.
 
-### BUG-002 — Hardcoded Price Data in `/api/stats`
-**File:** `backend/api/routes/public.py` — `get_stats()`  
-**Problem:** `tao_price = 180.80`, `market_cap = subnets_count * 100_000_000`, and `volume_24h = 8_400_000` are hardcoded. The `PriceService` fetches real data from CoinGecko every 5 minutes into `PriceHistory`, but `get_stats()` never reads from it.  
-**Fix:** Query the latest `PriceHistory` document in `get_stats()` and return real values. Fall back to the last known value if the collection is empty.
+### ~~BUG-002 — Hardcoded Price Data in `/api/stats`~~ ✅ FIXED 2026-05-01
+`get_stats()` now queries the latest `PriceHistory` document for `tao_price`, `market_cap`, and `volume_24h`. Falls back to `0.0` until PriceService completes its first sync. Also fixed symbol mismatch: query now uses `"TAO/USD"` to match what `PriceService` writes.
 
-### BUG-003 — `.env.example` Missing
-**Problem:** No `.env.example` or `.env.local.example` in the repository. Any new developer or deployment environment has no reference for required variables.  
-**Fix:** Create `backend/.env.example` listing all variables from `backend/config/settings.py` with placeholder values and comments.
+### ~~BUG-003 — `.env.example` Missing~~ ✅ FIXED 2026-05-01
+Root `.env.example` created with all required variables, Docker defaults, and inline comments for every setting.
 
-### BUG-004 — `render.yaml` Incomplete
-**File:** `render.yaml`  
-**Problem:** No environment variables are declared. Deployments to Render will fail silently on missing config.  
-**Fix:** Add `envVars` blocks for all required settings (Firebase, TaoStats, MongoDB, Sentry, CORS).
+### ~~BUG-004 — `render.yaml` Incomplete~~ ✅ FIXED 2026-05-01
+All backend and frontend env vars added with `sync: false` for secrets. Python bumped to 3.12, `startCommand` and `rootDir` corrected per service.
+
+### ~~BUG-005 — Structlog `multiple values for argument 'event'` in Background Services~~ ✅ FIXED 2026-05-01
+All 5 background services (`health`, `price`, `metagraph`, `github`, `news`) were passing `event=` as a keyword arg to `log_sync()`, which internally calls structlog with the first positional string already serving as `event`. Removed the redundant `event=` kwarg from every call site. Health monitor, price sync, and all other schedulers now log cleanly without error.
 
 ---
 
@@ -77,34 +73,35 @@ These must be fixed before any production deployment.
 **Goal:** Fix all blockers, make the live site fully functional with real data.  
 **Estimate:** 3–5 days
 
-### 3.1 Fix Duplicate Routes (BUG-001)
-- [ ] Delete duplicate stub definitions of `get_research` and `get_lessons` from `backend/api/routes/public.py`
-- [ ] Verify both endpoints return paginated real data from MongoDB
+### 3.1 Fix Duplicate Routes (BUG-001) ✅ DONE
+- [x] Delete duplicate stub definitions of `get_research` and `get_lessons` from `backend/api/routes/public.py`
+- [x] Verify both endpoints return paginated real data from MongoDB
 
-### 3.2 Wire Real Price Data to `/api/stats` (BUG-002)
-- [ ] In `get_stats()`, query latest `PriceHistory` document for `tao_price`, `price_change_24h`, and `volume_24h`
-- [ ] Query `Subnet` collection for actual total ecosystem market cap
-- [ ] Add fallback to last known price if no `PriceHistory` exists yet
+### 3.2 Wire Real Price Data to `/api/stats` (BUG-002) ✅ DONE
+- [x] In `get_stats()`, query latest `PriceHistory` document for `tao_price`, `price_change_24h`, and `volume_24h`
+- [x] Query `Subnet` collection for actual total ecosystem market cap
+- [x] Add fallback to `0.0` if no `PriceHistory` exists yet
 
 ### 3.3 Create `.env.example` (BUG-003)
 - [ ] Create `backend/.env.example` with all variables from `backend/config/settings.py`
 - [ ] Create `frontend/.env.example` with all frontend environment variables
 - [ ] Add setup instructions to `README.md` referencing the example files
 
-### 3.4 Complete `render.yaml` (BUG-004)
-- [ ] Add all backend environment variables with `sync: false` for secrets
-- [ ] Add MongoDB Atlas connection string variable
-- [ ] Add frontend environment variables pointing to backend service URL
-- [ ] Add Redis service if caching layer is needed for rate limiting
+### 3.4 Complete `render.yaml` (BUG-004) ✅ DONE
+- [x] Add all backend environment variables with `sync: false` for secrets
+- [x] Add MongoDB Atlas connection string variable
+- [x] Add all frontend `VITE_` environment variables pointing to backend service URL
+- [x] Correct `startCommand` paths, bump to Python 3.12
 
-### 3.5 Integrate Sentiment Scores into Subnet Responses
-- [ ] Import and call `SentimentService` inside `get_subnet_detail()` in `public.py`
-- [ ] Add `sentiment_score` and `fear_greed_index` fields to subnet detail response
-- [ ] Optionally surface aggregated ecosystem sentiment in `/api/stats`
+### 3.5 Integrate Sentiment Scores into Subnet Responses ✅ DONE
+- [x] Import and call `FearGreedEngine` inside `get_subnet_detail()` in `public.py`
+- [x] Add `ecosystem_sentiment` block to subnet detail response (score, label, components, computed_at)
+- [x] News fetch and sentiment compute run concurrently via `asyncio.gather`
 
-### 3.6 Fix Default Docker Credentials
-- [ ] Replace hardcoded `password` in `docker-compose.yml` MongoDB service with an env variable
-- [ ] Add `MONGO_PASSWORD` to `.env.example`
+### 3.6 Fix Default Docker Credentials ✅ DONE
+- [x] `MONGODB_PASSWORD` now required via `:?` — Docker Compose fails loudly if unset
+- [x] Removed `:-password` fallback from all references in `docker-compose.yml`
+- [x] Fixed frontend env prefix from `NEXT_PUBLIC_` to `VITE_` in compose and `.env.example`
 
 ---
 
@@ -335,8 +332,8 @@ NEXT_PUBLIC_SENTRY_DSN=
 | Config / Env | 60% | 90% | 90% | 90% | 100% |
 | Deployment | 80% | 90% | 90% | 90% | 100% |
 | Documentation | 50% | 65% | 70% | 80% | 95% |
-| **Overall** | **78%** | **86%** | **91%** | **96%** | **99%** |
+| **Overall** | **84%** | **86%** | **91%** | **96%** | **99%** |
 
 ---
 
-*This plan was generated from a full codebase audit on 2026-05-01. Update this document as tasks are completed and new issues are discovered.*
+*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete + BUG-005 structlog fix. Overall: 84%.*

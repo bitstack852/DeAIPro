@@ -13,7 +13,7 @@ class Subnet(Document):
     """
     
     # Basic identification
-    id: Indexed(int, unique=True)  # NetUID
+    id: int  # NetUID — maps to _id, always unique
     name: str
     category: str
     icon: Optional[str] = None  # emoji or icon URL
@@ -48,7 +48,6 @@ class Subnet(Document):
     class Settings:
         collection = "subnets"
         indexes = [
-            [("id", 1)],  # unique index on id
             [("category", 1)],
             [("market_cap_millions", -1)],
             [("apy", -1)],

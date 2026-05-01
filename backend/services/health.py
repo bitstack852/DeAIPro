@@ -22,10 +22,7 @@ class HealthService(BaseService):
             # This is a passive monitoring service
             # It doesn't make any network calls or updates
             # It just provides a method to get health status
-            await self.log_sync(
-                "health_check_completed",
-                event="health_check",
-            )
+            await self.log_sync("health_check_completed")
         except Exception as e:
             await self.log_sync(
                 "health_check_failed",

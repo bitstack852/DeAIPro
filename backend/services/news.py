@@ -32,7 +32,7 @@ class NewsService(BaseService):
 
         try:
             await self.update_sync_state(SyncStatus.RUNNING)
-            await self.log_sync("news_sync_started", event="sync_start")
+            await self.log_sync("news_sync_started")
 
             # Fetch from multiple sources
             all_news = await self._fetch_from_all_sources()
@@ -55,7 +55,6 @@ class NewsService(BaseService):
             )
             await self.log_sync(
                 "news_sync_complete",
-                event="sync_complete",
                 articles_created=records_created,
                 duration_seconds=duration,
             )
