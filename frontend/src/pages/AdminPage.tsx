@@ -5,7 +5,7 @@ import { getAdminStatus, approveAccess } from "../services/api";
 import { auth } from "../firebase";
 
 const getFreshToken = async (): Promise<string | null> =>
-  auth?.currentUser ? auth.currentUser.getIdToken() : null;
+  auth?.currentUser ? auth.currentUser.getIdToken(true) : null;
 
 const STAFF_DOMAIN = "@deaistrategies.io";
 
