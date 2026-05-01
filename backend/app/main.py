@@ -25,6 +25,43 @@ from dependencies.scheduler import scheduler
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
+import datetime
+import google.auth.credentials as _google_creds
+
+
+class _TokenVerificationCredential(_google_creds.Credentials):
+    """No-op credential satisfying google.auth interface.
+
+    verify_id_token only fetches Google's public certificates from an
+    unauthenticated public URL, so no real credential is needed.
+    This avoids triggering google.auth.default() / ADC lookup entirely.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.token = "noop"
+        self.expiry = datetime.datetime(9999, 1, 1)
+
+    @property
+    def valid(self):
+        return True
+
+    @property
+    def expired(self):
+        return False
+
+    def refresh(self, request):
+        pass
+
+    def apply(self, headers, token=None):
+        pass  # Do not add auth headers to public cert requests
+
+
+class _NoAuthFirebaseCredential:
+    """Firebase Admin credential wrapper for token-verification-only mode."""
+
+    def get_credential(self):
+        return _TokenVerificationCredential()
 
 # Configure logging
 setup_logging()
@@ -59,12 +96,14 @@ def init_firebase():
             logger.info("✓ Firebase Admin initialised (service account)")
         elif settings.firebase_project_id:
             # GOOGLE_APPLICATION_CREDENTIALS still points to the missing file in the
-            # OS environment (set by docker-compose). google.auth reads it during
-            # verify_id_token and raises DefaultCredentialsError, so we must unset it.
+            # OS environment (set by docker-compose). Clear it so google.auth doesn't
+            # try to load the non-existent file.
             os.environ.pop("GOOGLE_APPLICATION_CREDENTIALS", None)
-            # Project-ID-only mode: sufficient for verify_id_token
+            # Pass a no-op credential so Firebase Admin never calls google.auth.default().
+            # verify_id_token only needs Google's public certs (unauthenticated URL).
             firebase_admin.initialize_app(
-                options={"projectId": settings.firebase_project_id}
+                _NoAuthFirebaseCredential(),
+                options={"projectId": settings.firebase_project_id},
             )
             logger.info(
                 "✓ Firebase Admin initialised (project ID only — token verification only)",
