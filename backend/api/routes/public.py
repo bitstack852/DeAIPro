@@ -6,11 +6,13 @@ from fastapi import APIRouter, Request, status, Query
 from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+import asyncio
 import structlog
 from datetime import datetime
 from typing import Optional
 
 from models import Subnet, SubnetNews, ResearchArticle, Lesson, PriceHistory
+from services.sentiment import FearGreedEngine
 from schemas import (
     StatsResponse,
     SubnetsResponse,
@@ -149,9 +151,12 @@ async def get_subnet_detail(request: Request, subnet_id: int):
                 "code": "NOT_FOUND",
             }
         
-        # Get recent news for this subnet
-        news = await SubnetNews.find(SubnetNews.subnet_id == subnet_id).limit(5).to_list(None)
-        
+        # Get recent news and ecosystem sentiment concurrently
+        news, sentiment = await asyncio.gather(
+            SubnetNews.find(SubnetNews.subnet_id == subnet_id).limit(5).to_list(None),
+            FearGreedEngine.compute(),
+        )
+
         return {
             "status": "success",
             "data": {
@@ -168,6 +173,7 @@ async def get_subnet_detail(request: Request, subnet_id: int):
                     "momentum_score": subnet.momentum_score,
                     "quality_score": subnet.quality_score,
                 },
+                "ecosystem_sentiment": sentiment,
                 "recent_news": [
                     {
                         "title": n.title,
