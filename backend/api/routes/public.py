@@ -10,7 +10,7 @@ import structlog
 from datetime import datetime
 from typing import Optional
 
-from models import Subnet, SubnetNews, ResearchArticle, Lesson
+from models import Subnet, SubnetNews, ResearchArticle, Lesson, PriceHistory
 from schemas import (
     StatsResponse,
     SubnetsResponse,
@@ -42,11 +42,15 @@ async def get_stats(request: Request):
         subnets = await Subnet.find().to_list(None)
         total_ecosystem_mc = sum(s.market_cap_millions for s in subnets) * 1_000_000
         
-        # Placeholder for TAO price (would come from external API in Phase 3)
-        tao_price = 180.80
-        market_cap = subnets_count * 100_000_000  # Placeholder
-        volume_24h = 8_400_000  # Placeholder
-        
+        # Fetch latest TAO price from PriceHistory (written by PriceService every 5 min)
+        latest_price = await PriceHistory.find(
+            PriceHistory.symbol == "TAO"
+        ).sort([("timestamp", -1)]).first_or_none()
+
+        tao_price = latest_price.close if latest_price else 0.0
+        market_cap = latest_price.market_cap if latest_price else 0.0
+        volume_24h = latest_price.volume_24h if latest_price else 0.0
+
         return {
             "status": "success",
             "data": {
@@ -327,23 +331,6 @@ async def get_lessons(
             "message": "Failed to fetch lessons",
             "code": "LESSONS_ERROR",
         }
-
-@limiter.limit("100/minute")
-async def get_research(request: Request):
-    """Get research articles"""
-    return {
-        "articles": [],
-        "message": "Research articles added in Phase 2",
-    }
-
-@router.get("/api/lessons")
-@limiter.limit("100/minute")
-async def get_lessons(request: Request):
-    """Get educational lessons"""
-    return {
-        "lessons": [],
-        "message": "Lessons added in Phase 2",
-    }
 
 @router.post("/api/request-access")
 @limiter.limit("10/minute")
