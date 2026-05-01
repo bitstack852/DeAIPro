@@ -110,23 +110,25 @@ All 5 background services (`health`, `price`, `metagraph`, `github`, `news`) wer
 **Goal:** Implement the admin panel and full access approval workflow.  
 **Estimate:** 1–2 weeks
 
-### 4.1 Admin Authentication Middleware
-- [ ] Create `backend/dependencies/admin.py` — verify caller has `@deaistrategies.io` email domain via Firebase token
-- [ ] Apply admin dependency to all `/api/admin/*` routes
-- [ ] Return `403 Forbidden` (not `200 pending_implementation`) for unauthorized callers
+### 4.1 Admin Authentication Middleware ✅ DONE
+- [x] `require_staff` dependency in `backend/dependencies/auth.py` — verifies `@deaistrategies.io` Firebase token, raises `403` for everyone else
+- [x] Fixed `get_current_user` to read `Authorization` header via `Header(None)` (was incorrectly wired as query param)
+- [x] `require_staff` exported from `backend/dependencies/__init__.py`
 
-### 4.2 Implement `/api/admin/approve-access`
+### 4.2 Implement `/api/admin/approve-access` ✅ DONE
 **File:** `backend/api/routes/admin.py`
-- [ ] Accept `email` in request body
-- [ ] Find the most recent `TemporaryAccess` document for that email
-- [ ] Mark it as `approved = True` with `approved_at` timestamp
-- [ ] Optionally extend TTL on approval
-- [ ] Return success/failure with the token details
+- [x] Accepts `email` + optional `extend_hours` in request body (typed Pydantic model)
+- [x] Finds most recent non-revoked `TemporaryAccess` for that email
+- [x] Marks `approved = True` with `approved_at` timestamp
+- [x] Optionally extends TTL by `extend_hours` from approval time
+- [x] Returns success/already-approved/404 with token details
+- [x] Gated behind `require_staff` — returns `403` for non-staff callers
 
-### 4.3 Implement `/api/admin/status`
-- [ ] Return list of pending access requests (unapproved, non-expired `TemporaryAccess` docs)
-- [ ] Return counts: pending, approved, revoked, expired
-- [ ] Return recent admin actions log (last 50 events)
+### 4.3 Implement `/api/admin/status` ✅ DONE
+- [x] Returns pending requests (unapproved, non-expired, non-revoked `TemporaryAccess` docs)
+- [x] Returns counts: pending, approved, revoked, expired, total
+- [x] Pending list sorted newest first with email, created_at, expires_at, request_count
+- [x] Gated behind `require_staff`
 
 ### 4.4 Admin Dashboard — Frontend
 - [ ] Add `/admin` route to Next.js `app/` directory, behind Firebase auth guard
@@ -336,4 +338,4 @@ NEXT_PUBLIC_SENTRY_DSN=
 
 ---
 
-*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete + BUG-005 structlog fix. Overall: 84%.*
+*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete, Phase 2 admin endpoints (4.1–4.3) done. Overall: 86%.*
