@@ -42,19 +42,34 @@ if settings.sentry_dsn_backend:
 
 # Initialize Firebase Admin
 def init_firebase():
-    """Initialize Firebase Admin SDK"""
+    """Initialize Firebase Admin SDK.
+
+    Prefers a service account file for full Admin SDK capabilities.
+    Falls back to project-ID-only mode which is sufficient for token
+    verification (the only thing the API needs for auth).
+    """
+    if firebase_admin._apps:
+        return  # already initialised
+
     try:
-        if settings.google_application_credentials and os.path.exists(
-            settings.google_application_credentials
-        ):
-            cred = credentials.Certificate(settings.google_application_credentials)
-            if not firebase_admin._apps:
-                firebase_admin.initialize_app(cred)
-            logger.info("✓ Firebase Admin initialized")
+        cred_path = settings.google_application_credentials
+        if cred_path and os.path.exists(cred_path):
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+            logger.info("✓ Firebase Admin initialised (service account)")
+        elif settings.firebase_project_id:
+            # Project-ID-only mode: sufficient for verify_id_token
+            firebase_admin.initialize_app(
+                options={"projectId": settings.firebase_project_id}
+            )
+            logger.info(
+                "✓ Firebase Admin initialised (project ID only — token verification only)",
+                project_id=settings.firebase_project_id,
+            )
         else:
-            logger.warning("⚠️ Firebase credentials not found, proceeding without auth")
+            logger.warning("⚠️ Firebase not configured — all auth will return 401")
     except Exception as e:
-        logger.error(f"Firebase initialization failed: {e}")
+        logger.error(f"Firebase initialisation failed: {e}")
         if settings.environment == "production":
             raise
 
