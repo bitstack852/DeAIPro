@@ -16,9 +16,10 @@
 5. [Phase 3 — Data Quality & Real-Time Features](#5-phase-3--data-quality--real-time-features)
 6. [Phase 4 — Premium Features & Monetization](#6-phase-4--premium-features--monetization)
 7. [Phase 5 — Scale & Polish](#7-phase-5--scale--polish)
-8. [Tech Debt Backlog](#8-tech-debt-backlog)
-9. [Infrastructure & DevOps](#9-infrastructure--devops)
-10. [Completion Tracker](#10-completion-tracker)
+8. [Phase 6 — Authenticated App Redesign](#8-phase-6--authenticated-app-redesign)
+9. [Tech Debt Backlog](#9-tech-debt-backlog)
+10. [Infrastructure & DevOps](#10-infrastructure--devops)
+11. [Completion Tracker](#11-completion-tracker)
 
 ---
 
@@ -260,7 +261,62 @@ All 5 background services (`health`, `price`, `metagraph`, `github`, `news`) wer
 
 ---
 
-## 8. Tech Debt Backlog
+## 8. Phase 6 — Authenticated App Redesign
+
+**Goal:** Completely redesign the authenticated experience — everything visible after login. The landing page and sign-in overlay are not touched.
+**Estimate:** 1–2 weeks
+
+### Design Principles
+- Dark mode by default on load, matching the landing page visual identity
+- Light/dark toggle in the app header — preference saved to `localStorage`
+- Source of truth for colours and style: existing landing page (`#10131f` background, `#5b5ef4`/`#7c7fff` purple/blue accents, `#dde4f8` text)
+- Professional and clean — serious analytics platform aesthetic, not a generic dashboard
+- Intentional white space — balanced, not wasted, not cluttered
+- No raw Tailwind utility aesthetics — all components should feel custom and polished
+
+### 8.1 Sidebar Redesign
+- [ ] Collapsed by default — icon-only, narrow strip
+- [ ] Expand/collapse via toggle button — smooth CSS transition
+- [ ] Active page state clearly highlighted with accent colour
+- [ ] Correct proportions — sidebar should not dominate screen real estate
+- [ ] Dark/light mode aware
+
+### 8.2 Global Layout & Theme System
+- [ ] Create a theme context (`ThemeContext`) — provides `dark` / `light` mode to all components
+- [ ] Save theme preference to `localStorage`, restore on load
+- [ ] Dark mode colour tokens: background `#10131f`, surface `#161929`, border `rgba(91,94,244,0.2)`, text `#dde4f8`, muted `#8492be`
+- [ ] Light mode colour tokens: clean white/grey professional palette
+- [ ] Toggle button in app header (sun/moon icon)
+
+### 8.3 Card & Component System
+- [ ] Redesign stat cards — elevation with subtle shadow, colour-coded accent bars, strong typographic hierarchy
+- [ ] Redesign data tables — proper row hover states, clear column headers, alternating row treatment
+- [ ] Redesign empty states — illustrated or icon-based, not blank white boxes
+- [ ] Redesign loading skeletons — match new dark card style
+
+### 8.4 Dashboard Page Redesign
+- [ ] Key metrics row — large, bold stat cards with icons and trend indicators
+- [ ] Subnet table — clean, scannable, sortable with visible sort controls
+- [ ] Category distribution — proper chart or visual breakdown, not an empty box
+- [ ] News snippet section — card-based, not plain text list
+
+### 8.5 Internal Pages Redesign
+- [ ] News page — card grid layout, source badges, timestamp formatting
+- [ ] Research page — article cards with excerpt, category tag, read-more CTA
+- [ ] Education/Lessons page — structured lesson cards with progress indicators
+- [ ] Portfolio page — holdings table with P&L colour coding
+- [ ] Settings page — clean form layout with section grouping
+
+### 8.6 Admin Page Redesign
+- [ ] Stats panel — pending/approved/revoked/expired counts as proper stat cards
+- [ ] Pending requests table — clean table with email, date, action button
+- [ ] Approve button — styled consistently with accent theme
+- [ ] Success/error banners — styled alert components matching new theme
+- [ ] Access Denied state — designed, not a plain text message
+
+---
+
+## 9. Tech Debt Backlog
 
 These are lower-priority cleanup items to address between phases.
 
@@ -339,4 +395,4 @@ NEXT_PUBLIC_SENTRY_DSN=
 
 ---
 
-*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete, Phase 2 tasks 4.1–4.4 done. Overall: 87%.*
+*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete, Phase 2 tasks 4.1–4.4 done, Phase 6 (Redesign) planned. Overall: 87%.*
