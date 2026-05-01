@@ -84,6 +84,24 @@ export interface AccessRequest {
   email: string;
 }
 
+export interface PendingRequest {
+  email: string;
+  created_at: string;
+  expires_at: string;
+  request_count: number;
+}
+
+export interface AdminStatusData {
+  counts: {
+    pending: number;
+    approved: number;
+    revoked: number;
+    expired: number;
+    total: number;
+  };
+  pending_requests: PendingRequest[];
+}
+
 // UI State Types
 export interface SortConfig {
   key: keyof Subnet;

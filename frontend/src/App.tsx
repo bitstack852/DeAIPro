@@ -4,6 +4,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { NewsPage, ResearchPage, LessonsPage } from "./pages/ContentPages";
 import { SubnetDetailPage, SignInOverlay } from "./pages/DetailPages";
 import { LandingPage } from "./pages/LandingPage";
+import AdminPage from "./pages/AdminPage";
 import { Header, Sidebar, Footer, Container } from "./components/layout/Layout";
 import { Alert, Button } from "./components/ui/Button";
 import { getCategoryIcon } from "./utils/formatters";
@@ -17,13 +18,16 @@ type PageType =
   | "lessons"
   | "portfolio"
   | "settings"
-  | "access";
+  | "access"
+  | "admin";
 
 interface AppLayoutProps {
   currentPage: PageType;
   onPageChange: (page: PageType) => void;
   selectedSubnetId?: number;
 }
+
+const STAFF_DOMAIN = "@deaistrategies.io";
 
 const AppLayout: React.FC<AppLayoutProps> = ({
   currentPage,
@@ -33,6 +37,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   const { state } = useData();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const isStaff = !!state.user?.email?.toLowerCase().endsWith(STAFF_DOMAIN);
+
   const sidebarItems = [
     { icon: "📊", label: "Dashboard", href: "dashboard" },
     { icon: "📰", label: "News Feed", href: "news" },
@@ -40,6 +46,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
     { icon: "📚", label: "Education", href: "lessons" },
     { icon: "💼", label: "Portfolio", href: "portfolio" },
     { icon: "⚙️", label: "Settings", href: "settings" },
+    ...(isStaff ? [{ icon: "🛡️", label: "Admin", href: "admin" }] : []),
   ];
 
   const renderPage = () => {
@@ -57,7 +64,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       case "settings":
         return <SettingsPage />;
       case "access":
-        return <DashboardPage />; // Replaced with Dashboard overlay
+        return <DashboardPage />;
+      case "admin":
+        return <AdminPage />;
       default:
         return <DashboardPage />;
     }
