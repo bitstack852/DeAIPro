@@ -293,31 +293,26 @@ export const SubnetDetailPage: React.FC<{ subnetId: number }> = ({
 };
 
 import { auth } from "../firebase";
-import { sendSignInLinkToEmail } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export const SignInOverlay: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const [success, setSuccess] = React.useState(false);
   const [error, setError] = React.useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) { setError("Firebase is not configured."); return; }
     setLoading(true);
     setError("");
 
     try {
-      const actionCodeSettings = {
-        url: window.location.origin,
-        handleCodeInApp: true,
-      };
-      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-      window.localStorage.setItem("emailForSignIn", email);
-      setSuccess(true);
-      setEmail("");
+      await signInWithEmailAndPassword(auth, email, password);
+      if (onClose) onClose();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An error occurred. Please try again."
+        err instanceof Error ? err.message : "Invalid email or password."
       );
     } finally {
       setLoading(false);
@@ -377,33 +372,7 @@ export const SignInOverlay: React.FC<{ onClose?: () => void }> = ({ onClose }) =
           </button>
         )}
 
-        {success ? (
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "48px", marginBottom: "16px" }}>✉️</div>
-            <h2 style={{ fontSize: "22px", fontWeight: 700, marginBottom: "8px" }}>
-              Sign-In Link Sent
-            </h2>
-            <p style={{ color: "#8492be", marginBottom: "24px", lineHeight: 1.6 }}>
-              Check your inbox for a secure magic link to access the platform. No password needed.
-            </p>
-            <button
-              onClick={() => setSuccess(false)}
-              style={{
-                background: "rgba(91,94,244,0.15)",
-                border: "1px solid rgba(91,94,244,0.3)",
-                color: "#7c7fff",
-                borderRadius: "8px",
-                padding: "10px 24px",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                fontSize: "14px",
-              }}
-            >
-              Send Another Link
-            </button>
-          </div>
-        ) : (
-          <>
+        <>
             {/* Logo mark */}
             <div style={{ textAlign: "center", marginBottom: "28px" }}>
               <div style={{
@@ -418,10 +387,10 @@ export const SignInOverlay: React.FC<{ onClose?: () => void }> = ({ onClose }) =
                 </svg>
               </div>
               <h2 style={{ fontSize: "22px", fontWeight: 700, marginBottom: "6px" }}>
-                Access DeAI Strategies
+                Sign In to DeAIPro
               </h2>
               <p style={{ color: "#8492be", fontSize: "14px", lineHeight: 1.6 }}>
-                Enter your authorized email to receive a secure sign-in link. No password required.
+                Enter your credentials to access the platform.
               </p>
             </div>
 
@@ -468,6 +437,33 @@ export const SignInOverlay: React.FC<{ onClose?: () => void }> = ({ onClose }) =
                 />
               </div>
 
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "13px", color: "#8492be", marginBottom: "8px", fontWeight: 500 }}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  style={{
+                    width: "100%",
+                    background: "#0b0d1a",
+                    border: "1px solid rgba(91,94,244,0.25)",
+                    borderRadius: "10px",
+                    padding: "12px 16px",
+                    color: "#dde4f8",
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "14px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={e => (e.currentTarget.style.borderColor = "rgba(91,94,244,0.7)")}
+                  onBlur={e => (e.currentTarget.style.borderColor = "rgba(91,94,244,0.25)")}
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={loading}
@@ -486,7 +482,7 @@ export const SignInOverlay: React.FC<{ onClose?: () => void }> = ({ onClose }) =
                   boxShadow: "0 4px 24px rgba(91,94,244,0.35)",
                 }}
               >
-                {loading ? "Sending…" : "Send Sign-In Link →"}
+                {loading ? "Signing in…" : "Sign In →"}
               </button>
             </form>
 
@@ -494,7 +490,6 @@ export const SignInOverlay: React.FC<{ onClose?: () => void }> = ({ onClose }) =
               Platform access is by invitation only. © 2026 DeAI Strategies Corp.
             </p>
           </>
-        )}
       </div>
     </div>
   );
