@@ -39,26 +39,21 @@ class CurrentUser(BaseModel):
 
 
 async def verify_token(token: str) -> Optional[dict]:
-    """Verify a Firebase ID token asynchronously.
-
-    The Firebase Admin SDK calls `requests.get` to fetch Google's public keys
-    on cache-misses, which is a synchronous blocking I/O operation.  We run it
-    in the default thread-pool executor so the event loop is never stalled.
-    """
+    """Verify a Firebase ID token asynchronously."""
     loop = asyncio.get_event_loop()
     try:
         decoded_token = await loop.run_in_executor(
             None, partial(firebase_auth.verify_id_token, token)
         )
         return decoded_token
-    except firebase_auth.InvalidIdTokenError:
-        logger.warning("Token verification failed: invalid ID token")
+    except firebase_auth.InvalidIdTokenError as e:
+        logger.warning(f"Token verification failed — InvalidIdToken: {e}")
         return None
-    except firebase_auth.ExpiredIdTokenError:
-        logger.warning("Token verification failed: expired ID token")
+    except firebase_auth.ExpiredIdTokenError as e:
+        logger.warning(f"Token verification failed — ExpiredIdToken: {e}")
         return None
     except Exception as e:
-        logger.error(f"Token verification error: {e}")
+        logger.error(f"Token verification error — {type(e).__name__}: {e}")
         return None
 
 
