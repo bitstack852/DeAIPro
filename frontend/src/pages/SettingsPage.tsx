@@ -8,6 +8,10 @@ import {
   testAdminConfig,
   updateAdminConfig,
 } from "../services/api";
+import { auth } from "../firebase";
+
+const getFreshToken = async (): Promise<string | null> =>
+  auth?.currentUser ? auth.currentUser.getIdToken() : null;
 
 const STAFF_DOMAIN = "@deaistrategies.io";
 
@@ -80,11 +84,10 @@ const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void; disab
 // ── Config row (non-flag)
 interface ConfigRowProps {
   entry: ConfigEntry;
-  token: string;
   onSaved: (key: string, value: string) => void;
 }
 
-const ConfigRow: React.FC<ConfigRowProps> = ({ entry, token, onSaved }) => {
+const ConfigRow: React.FC<ConfigRowProps> = ({ entry, onSaved }) => {
   const [value, setValue]         = useState(entry.value);
   const [revealed, setRevealed]   = useState(false);
   const [saving, setSaving]       = useState(false);
@@ -97,6 +100,8 @@ const ConfigRow: React.FC<ConfigRowProps> = ({ entry, token, onSaved }) => {
   const testService = TESTABLE[entry.key];
 
   const handleSave = async () => {
+    const token = await getFreshToken();
+    if (!token) return;
     setSaving(true);
     setSaveMsg(null);
     try {
@@ -113,6 +118,8 @@ const ConfigRow: React.FC<ConfigRowProps> = ({ entry, token, onSaved }) => {
 
   const handleTest = async () => {
     if (!testService) return;
+    const token = await getFreshToken();
+    if (!token) return;
     setTesting(true);
     setTestResult(null);
     if (testTimeout.current) clearTimeout(testTimeout.current);
@@ -234,15 +241,16 @@ const ConfigRow: React.FC<ConfigRowProps> = ({ entry, token, onSaved }) => {
 // ── Feature flag row
 interface FlagRowProps {
   entry: ConfigEntry;
-  token: string;
   onSaved: (key: string, value: string) => void;
 }
 
-const FlagRow: React.FC<FlagRowProps> = ({ entry, token, onSaved }) => {
+const FlagRow: React.FC<FlagRowProps> = ({ entry, onSaved }) => {
   const [enabled, setEnabled] = useState(entry.value === "true");
   const [saving, setSaving]   = useState(false);
 
   const handleToggle = async (next: boolean) => {
+    const token = await getFreshToken();
+    if (!token) return;
     setEnabled(next);
     setSaving(true);
     try {
@@ -278,7 +286,7 @@ const FlagRow: React.FC<FlagRowProps> = ({ entry, token, onSaved }) => {
 
 export const SettingsPage: React.FC = () => {
   const { state } = useData();
-  const { user, token } = state;
+  const { user } = state;
 
   const [activeCategory, setActiveCategory] = useState("data_sources");
   const [config, setConfig]   = useState<ConfigGroups>({});
@@ -288,22 +296,23 @@ export const SettingsPage: React.FC = () => {
   const isStaff = !!user?.email?.toLowerCase().endsWith(STAFF_DOMAIN);
 
   const fetchConfig = useCallback(async () => {
-    if (!token) return;
+    const freshToken = await getFreshToken();
+    if (!freshToken) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await getAdminConfig(token);
+      const data = await getAdminConfig(freshToken);
       setConfig(data);
     } catch (e: any) {
       setError(e.message || "Failed to load settings");
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
-    if (isStaff && token) fetchConfig();
-  }, [isStaff, token, fetchConfig]);
+    if (isStaff && user) fetchConfig();
+  }, [isStaff, user, fetchConfig]);
 
   // Update local state after a save so dirty detection resets
   const handleSaved = (key: string, value: string) => {
@@ -407,11 +416,11 @@ export const SettingsPage: React.FC = () => {
             <p style={{ fontSize: 13, color: "var(--text-dim)", marginTop: 24 }}>No settings in this category.</p>
           ) : activeCategory === "feature_flags" ? (
             entries.map(entry => (
-              <FlagRow key={entry.key} entry={entry} token={token!} onSaved={handleSaved} />
+              <FlagRow key={entry.key} entry={entry} onSaved={handleSaved} />
             ))
           ) : (
             entries.map(entry => (
-              <ConfigRow key={entry.key} entry={entry} token={token!} onSaved={handleSaved} />
+              <ConfigRow key={entry.key} entry={entry} onSaved={handleSaved} />
             ))
           )}
         </div>

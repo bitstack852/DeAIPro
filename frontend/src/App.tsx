@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const APP_VERSION = "2026-05-01.10";
+const APP_VERSION = "2026-05-01.11";
 console.log(`[DeAIPro] version ${APP_VERSION} loaded`);
 
 import { DataProvider, useData } from "./contexts/DataContext";

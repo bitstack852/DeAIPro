@@ -2,6 +2,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useData } from "../contexts/DataContext";
 import { AdminStatusData, PendingRequest } from "../types";
 import { getAdminStatus, approveAccess } from "../services/api";
+import { auth } from "../firebase";
+
+const getFreshToken = async (): Promise<string | null> =>
+  auth?.currentUser ? auth.currentUser.getIdToken() : null;
 
 const STAFF_DOMAIN = "@deaistrategies.io";
 
@@ -54,29 +58,31 @@ const AdminPage: React.FC = () => {
   const isStaff = !!user?.email?.toLowerCase().endsWith(STAFF_DOMAIN);
 
   const fetchStatus = useCallback(async () => {
-    if (!token) return;
+    const freshToken = await getFreshToken();
+    if (!freshToken) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await getAdminStatus(token);
+      const res = await getAdminStatus(freshToken);
       setAdminData(res.data);
     } catch (e: any) {
       setError(e.message || "Failed to load admin data");
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
-    if (isStaff && token) fetchStatus();
-  }, [isStaff, token, fetchStatus]);
+    if (isStaff && user) fetchStatus();
+  }, [isStaff, user, fetchStatus]);
 
   const handleApprove = async (email: string) => {
-    if (!token) return;
+    const freshToken = await getFreshToken();
+    if (!freshToken) return;
     setApproving(email);
     setSuccessMsg(null);
     try {
-      await approveAccess(email, token);
+      await approveAccess(email, freshToken);
       setSuccessMsg(`Access approved for ${email}`);
       fetchStatus();
     } catch (e: any) {
