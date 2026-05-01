@@ -58,6 +58,10 @@ def init_firebase():
             firebase_admin.initialize_app(cred)
             logger.info("✓ Firebase Admin initialised (service account)")
         elif settings.firebase_project_id:
+            # GOOGLE_APPLICATION_CREDENTIALS still points to the missing file in the
+            # OS environment (set by docker-compose). google.auth reads it during
+            # verify_id_token and raises DefaultCredentialsError, so we must unset it.
+            os.environ.pop("GOOGLE_APPLICATION_CREDENTIALS", None)
             # Project-ID-only mode: sufficient for verify_id_token
             firebase_admin.initialize_app(
                 options={"projectId": settings.firebase_project_id}
