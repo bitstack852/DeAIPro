@@ -16,7 +16,7 @@ services:
     networks:
       - deaipro_network
     healthcheck:
-      test: ['CMD', 'mongosh', 'localhost:27017/test', '-u', 'root', '-p', 'password']
+      test: ['CMD', 'mongosh', 'localhost:27017/test', '-u', '${MONGODB_USER:-root}', '-p', '${MONGODB_PASSWORD:-password}']
       interval: 10s
       timeout: 5s
       retries: 5
