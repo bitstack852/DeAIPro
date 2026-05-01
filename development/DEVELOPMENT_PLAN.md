@@ -274,45 +274,45 @@ All 5 background services (`health`, `price`, `metagraph`, `github`, `news`) wer
 - Intentional white space — balanced, not wasted, not cluttered
 - No raw Tailwind utility aesthetics — all components should feel custom and polished
 
-### 8.1 Sidebar Redesign
-- [ ] Collapsed by default — icon-only, narrow strip
-- [ ] Expand/collapse via toggle button — smooth CSS transition
-- [ ] Active page state clearly highlighted with accent colour
-- [ ] Correct proportions — sidebar should not dominate screen real estate
-- [ ] Dark/light mode aware
+### 8.1 Sidebar Redesign ✅
+- [x] Collapsed by default — icon-only, narrow strip
+- [x] Expand/collapse via toggle button — smooth CSS transition
+- [x] Active page state clearly highlighted with accent colour
+- [x] Correct proportions — sidebar should not dominate screen real estate
+- [x] Dark/light mode aware
 
-### 8.2 Global Layout & Theme System
-- [ ] Create a theme context (`ThemeContext`) — provides `dark` / `light` mode to all components
-- [ ] Save theme preference to `localStorage`, restore on load
-- [ ] Dark mode colour tokens: background `#10131f`, surface `#161929`, border `rgba(91,94,244,0.2)`, text `#dde4f8`, muted `#8492be`
-- [ ] Light mode colour tokens: clean white/grey professional palette
-- [ ] Toggle button in app header (sun/moon icon)
+### 8.2 Global Layout & Theme System ✅
+- [x] Create a theme context (`ThemeContext`) — provides `dark` / `light` mode to all components
+- [x] Save theme preference to `localStorage`, restore on load
+- [x] Dark mode colour tokens: background `#10131f`, surface `#161929`, border `rgba(91,94,244,0.2)`, text `#dde4f8`, muted `#8492be`
+- [x] Light mode colour tokens: clean white/grey professional palette
+- [x] Toggle button in app header (sun/moon icon)
 
-### 8.3 Card & Component System
-- [ ] Redesign stat cards — elevation with subtle shadow, colour-coded accent bars, strong typographic hierarchy
-- [ ] Redesign data tables — proper row hover states, clear column headers, alternating row treatment
-- [ ] Redesign empty states — illustrated or icon-based, not blank white boxes
-- [ ] Redesign loading skeletons — match new dark card style
+### 8.3 Card & Component System ✅
+- [x] Redesign stat cards — elevation with subtle shadow, colour-coded accent bars, strong typographic hierarchy
+- [x] Redesign data tables — proper row hover states, clear column headers, alternating row treatment
+- [x] Redesign empty states — illustrated or icon-based, not blank white boxes
+- [x] Redesign loading skeletons — match new dark card style
 
-### 8.4 Dashboard Page Redesign
-- [ ] Key metrics row — large, bold stat cards with icons and trend indicators
-- [ ] Subnet table — clean, scannable, sortable with visible sort controls
-- [ ] Category distribution — proper chart or visual breakdown, not an empty box
-- [ ] News snippet section — card-based, not plain text list
+### 8.4 Dashboard Page Redesign ✅
+- [x] Key metrics row — large, bold stat cards with icons and trend indicators
+- [x] Subnet table — clean, scannable, sortable with visible sort controls
+- [x] Category distribution — proper chart or visual breakdown, not an empty box
+- [x] News snippet section — card-based, not plain text list
 
-### 8.5 Internal Pages Redesign
-- [ ] News page — card grid layout, source badges, timestamp formatting
-- [ ] Research page — article cards with excerpt, category tag, read-more CTA
-- [ ] Education/Lessons page — structured lesson cards with progress indicators
-- [ ] Portfolio page — holdings table with P&L colour coding
-- [ ] Settings page — clean form layout with section grouping
+### 8.5 Internal Pages Redesign ✅
+- [x] News page — card grid layout, source badges, timestamp formatting
+- [x] Research page — article cards with excerpt, category tag, read-more CTA
+- [x] Education/Lessons page — structured lesson cards with progress indicators
+- [ ] Portfolio page — holdings table with P&L colour coding *(deferred — no portfolio data model yet)*
+- [ ] Settings page — clean form layout with section grouping *(deferred — no settings backend yet)*
 
-### 8.6 Admin Page Redesign
-- [ ] Stats panel — pending/approved/revoked/expired counts as proper stat cards
-- [ ] Pending requests table — clean table with email, date, action button
-- [ ] Approve button — styled consistently with accent theme
-- [ ] Success/error banners — styled alert components matching new theme
-- [ ] Access Denied state — designed, not a plain text message
+### 8.6 Admin Page Redesign ✅
+- [x] Stats panel — pending/approved/revoked/expired counts as proper stat cards
+- [x] Pending requests table — clean table with email, date, action button
+- [x] Approve button — styled consistently with accent theme
+- [x] Success/error banners — styled alert components matching new theme
+- [x] Access Denied state — designed, not a plain text message
 
 ---
 
@@ -395,4 +395,4 @@ NEXT_PUBLIC_SENTRY_DSN=
 
 ---
 
-*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete, Phase 2 tasks 4.1–4.4 done, Phase 6 (Redesign) planned. Overall: 87%.*
+*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete, Phase 2 tasks 4.1–4.4 done, Phase 6 (Redesign) complete (8.1–8.4 and 8.6 fully shipped; 8.5 Portfolio + Settings deferred pending backend). Overall: ~90%.*
