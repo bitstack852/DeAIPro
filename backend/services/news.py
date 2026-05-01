@@ -27,6 +27,11 @@ class NewsService(BaseService):
 
     async def run(self) -> None:
         """Fetch and aggregate news from multiple sources."""
+        from services.config_service import config_service
+        if not await config_service.get_bool("NEWS_SYNC_ENABLED", fallback=True):
+            logger.info("news_sync_disabled")
+            return
+
         start_time = datetime.utcnow()
         records_created = 0
 

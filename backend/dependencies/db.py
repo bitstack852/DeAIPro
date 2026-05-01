@@ -8,6 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from config.settings import settings
 from models import (
+    AppConfig,
     Lesson,
     PriceHistory,
     ResearchArticle,
@@ -47,6 +48,7 @@ class Database:
                     PriceHistory,
                     ResearchArticle,
                     Lesson,
+                    AppConfig,
                 ],
             )
             logger.info("✓ Beanie models initialized")

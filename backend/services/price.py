@@ -32,6 +32,11 @@ class PriceService(BaseService):
 
     async def run(self) -> None:
         """Fetch and store TAO price data."""
+        from services.config_service import config_service
+        if not await config_service.get_bool("PRICE_SYNC_ENABLED", fallback=True):
+            logger.info("price_sync_disabled")
+            return
+
         start_time = datetime.utcnow()
         records_created = 0
 

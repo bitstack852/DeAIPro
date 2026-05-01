@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const APP_VERSION = "2026-05-01.9";
+const APP_VERSION = "2026-05-01.10";
 console.log(`[DeAIPro] version ${APP_VERSION} loaded`);
 
 import { DataProvider, useData } from "./contexts/DataContext";
@@ -10,6 +10,7 @@ import { NewsPage, ResearchPage, LessonsPage } from "./pages/ContentPages";
 import { SignInOverlay } from "./pages/DetailPages";
 import { LandingPage } from "./pages/LandingPage";
 import AdminPage from "./pages/AdminPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { Sidebar, AppHeader } from "./components/layout/Layout";
 import { auth } from "./firebase";
 import { signOut } from "firebase/auth";
@@ -60,13 +61,6 @@ const PortfolioPage: React.FC = () => {
   );
 };
 
-const SettingsPage: React.FC = () => (
-  <div style={{ padding: "20px 24px 40px" }}>
-    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 24, maxWidth: 480 }}>
-      <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>Settings coming soon.</p>
-    </div>
-  </div>
-);
 
 // ── App Layout ────────────────────────────────────────────────────────────────
 

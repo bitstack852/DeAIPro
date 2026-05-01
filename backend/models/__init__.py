@@ -7,6 +7,7 @@ from .sync_state import SyncState
 from .price import PriceHistory
 from .research import ResearchArticle
 from .lesson import Lesson
+from .config import AppConfig
 
 __all__ = [
     "Subnet",
@@ -16,4 +17,5 @@ __all__ = [
     "PriceHistory",
     "ResearchArticle",
     "Lesson",
+    "AppConfig",
 ]
