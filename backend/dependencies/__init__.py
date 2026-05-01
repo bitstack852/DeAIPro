@@ -5,6 +5,7 @@ from .auth import (
     CurrentUser,
     get_current_user,
     require_admin,
+    require_staff,
     get_or_create_temp_access,
     verify_token,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "CurrentUser",
     "get_current_user",
     "require_admin",
+    "require_staff",
     "get_or_create_temp_access",
     "verify_token",
     "scheduler",
