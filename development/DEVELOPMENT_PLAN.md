@@ -93,10 +93,10 @@ Deleted duplicate `get_research` and `get_lessons` stub functions from `backend/
 - [ ] Add frontend environment variables pointing to backend service URL
 - [ ] Add Redis service if caching layer is needed for rate limiting
 
-### 3.5 Integrate Sentiment Scores into Subnet Responses
-- [ ] Import and call `SentimentService` inside `get_subnet_detail()` in `public.py`
-- [ ] Add `sentiment_score` and `fear_greed_index` fields to subnet detail response
-- [ ] Optionally surface aggregated ecosystem sentiment in `/api/stats`
+### 3.5 Integrate Sentiment Scores into Subnet Responses ✅ DONE
+- [x] Import and call `FearGreedEngine` inside `get_subnet_detail()` in `public.py`
+- [x] Add `ecosystem_sentiment` block to subnet detail response (score, label, components, computed_at)
+- [x] News fetch and sentiment compute run concurrently via `asyncio.gather`
 
 ### 3.6 Fix Default Docker Credentials
 - [ ] Replace hardcoded `password` in `docker-compose.yml` MongoDB service with an env variable
@@ -331,8 +331,8 @@ NEXT_PUBLIC_SENTRY_DSN=
 | Config / Env | 60% | 90% | 90% | 90% | 100% |
 | Deployment | 80% | 90% | 90% | 90% | 100% |
 | Documentation | 50% | 65% | 70% | 80% | 95% |
-| **Overall** | **80%** | **86%** | **91%** | **96%** | **99%** |
+| **Overall** | **82%** | **86%** | **91%** | **96%** | **99%** |
 
 ---
 
-*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — BUG-001 and BUG-002 resolved.*
+*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — BUG-001, BUG-002 resolved, sentiment wired. Overall: 82%.*
