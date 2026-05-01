@@ -2,15 +2,14 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# IMPROVED: Install system dependencies, including libraries required by
-# WeasyPrint (PDF generation) on Debian/Ubuntu-based images.
+# Install system dependencies including libraries required by WeasyPrint (PDF generation)
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
-    libgdk-pixbuf2.0-0 \
+    libgdk-pixbuf-xlib-2.0-0 \
     libffi-dev \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
