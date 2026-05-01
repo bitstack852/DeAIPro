@@ -1,5 +1,296 @@
 import React, { useState } from "react";
-import { Button } from "../ui/Button";
+import { useTheme } from "../../contexts/ThemeContext";
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+
+interface SidebarItem {
+  icon: React.ReactNode;
+  label: string;
+  href: string;
+  badge?: number;
+}
+
+interface SidebarProps {
+  items: SidebarItem[];
+  activeLocation?: string;
+  onItemClick?: (href: string) => void;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+const SIDEBAR_COLLAPSED = 60;
+const SIDEBAR_EXPANDED  = 220;
+
+export const Sidebar: React.FC<SidebarProps> = ({
+  items,
+  activeLocation,
+  onItemClick,
+  expanded,
+  onToggle,
+}) => {
+  const width = expanded ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED;
+
+  return (
+    <aside
+      style={{
+        width,
+        minWidth: width,
+        height: "100vh",
+        position: "sticky",
+        top: 0,
+        display: "flex",
+        flexDirection: "column",
+        background: "var(--surface)",
+        borderRight: "1px solid var(--border)",
+        transition: "width 0.25s ease, min-width 0.25s ease",
+        overflow: "hidden",
+        zIndex: 50,
+        flexShrink: 0,
+      }}
+    >
+      {/* Logo */}
+      <div
+        style={{
+          height: 56,
+          display: "flex",
+          alignItems: "center",
+          padding: "0 16px",
+          borderBottom: "1px solid var(--border)",
+          gap: 10,
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ flexShrink: 0 }}>
+          <svg width="28" height="28" viewBox="0 0 18 18" fill="none">
+            <polygon
+              points="9,1.5 16.5,5.5 16.5,12.5 9,16.5 1.5,12.5 1.5,5.5"
+              stroke="var(--accent-light)"
+              strokeWidth="1.5"
+              fill="none"
+            />
+            <circle cx="9" cy="9" r="2.4" fill="var(--accent)" />
+          </svg>
+        </div>
+        {expanded && (
+          <span
+            style={{
+              fontSize: 15,
+              fontWeight: 700,
+              color: "var(--text)",
+              whiteSpace: "nowrap",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            DeAIPro
+          </span>
+        )}
+      </div>
+
+      {/* Nav items */}
+      <nav style={{ flex: 1, padding: "8px 0", overflowY: "auto", overflowX: "hidden" }}>
+        {items.map((item) => {
+          const isActive = activeLocation === item.href;
+          return (
+            <button
+              key={item.href}
+              onClick={() => onItemClick?.(item.href)}
+              title={!expanded ? item.label : undefined}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: expanded ? "10px 14px" : "10px 0",
+                justifyContent: expanded ? "flex-start" : "center",
+                background: isActive ? "var(--accent-glow)" : "transparent",
+                border: "none",
+                borderLeft: isActive ? "3px solid var(--accent)" : "3px solid transparent",
+                color: isActive ? "var(--accent-light)" : "var(--text-muted)",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                fontSize: 13,
+                fontWeight: isActive ? 600 : 400,
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={e => {
+                if (!isActive) (e.currentTarget as HTMLElement).style.color = "var(--text)";
+              }}
+              onMouseLeave={e => {
+                if (!isActive) (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
+              }}
+            >
+              <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+              {expanded && (
+                <span style={{ flex: 1, textAlign: "left" }}>{item.label}</span>
+              )}
+              {expanded && item.badge && item.badge > 0 && (
+                <span
+                  style={{
+                    background: "var(--accent)",
+                    color: "#fff",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    borderRadius: 999,
+                    padding: "1px 6px",
+                  }}
+                >
+                  {item.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Toggle */}
+      <button
+        onClick={onToggle}
+        title={expanded ? "Collapse sidebar" : "Expand sidebar"}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: expanded ? "flex-start" : "center",
+          gap: 8,
+          padding: expanded ? "12px 16px" : "12px 0",
+          width: "100%",
+          background: "none",
+          border: "none",
+          borderTop: "1px solid var(--border)",
+          color: "var(--text-dim)",
+          cursor: "pointer",
+          fontSize: 12,
+          flexShrink: 0,
+          transition: "color 0.15s ease",
+        }}
+        onMouseEnter={e => (e.currentTarget.style.color = "var(--text-muted)")}
+        onMouseLeave={e => (e.currentTarget.style.color = "var(--text-dim)")}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.25s ease", flexShrink: 0 }}
+        >
+          <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        {expanded && <span>Collapse</span>}
+      </button>
+    </aside>
+  );
+};
+
+// ── App Header ───────────────────────────────────────────────────────────────
+
+interface AppHeaderProps {
+  title: string;
+  user?: { email?: string | null } | null;
+  onSignOut?: () => void;
+}
+
+export const AppHeader: React.FC<AppHeaderProps> = ({ title, user, onSignOut }) => {
+  const { theme, toggleTheme } = useTheme();
+
+  return (
+    <header
+      style={{
+        height: 56,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 24px",
+        background: "var(--surface)",
+        borderBottom: "1px solid var(--border)",
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
+        flexShrink: 0,
+      }}
+    >
+      <h1
+        style={{
+          fontSize: 15,
+          fontWeight: 600,
+          color: "var(--text)",
+          margin: 0,
+          letterSpacing: "-0.01em",
+        }}
+      >
+        {title}
+      </h1>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 8,
+            border: "1px solid var(--border)",
+            background: "var(--surface-2)",
+            color: "var(--text-muted)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            fontSize: 15,
+            transition: "all 0.15s ease",
+          }}
+        >
+          {theme === "dark" ? "☀️" : "🌙"}
+        </button>
+
+        {/* User email */}
+        {user?.email && (
+          <span
+            style={{
+              fontSize: 12,
+              color: "var(--text-muted)",
+              maxWidth: 160,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {user.email}
+          </span>
+        )}
+
+        {/* Sign out */}
+        {onSignOut && (
+          <button
+            onClick={onSignOut}
+            style={{
+              padding: "6px 14px",
+              borderRadius: 8,
+              border: "1px solid var(--border)",
+              background: "transparent",
+              color: "var(--text-muted)",
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.color = "var(--danger)";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--danger)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
+            }}
+          >
+            Sign out
+          </button>
+        )}
+      </div>
+    </header>
+  );
+};
+
+// ── Legacy Header (kept for compatibility) ────────────────────────────────────
 
 interface HeaderProps {
   title: string;
@@ -8,229 +299,49 @@ interface HeaderProps {
   onMenuToggle?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  title,
-  subtitle,
-  actions,
-  onMenuToggle,
-}) => {
-  return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-          {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
-        </div>
-        <div className="flex items-center gap-4">
-          {actions}
-          {onMenuToggle && (
-            <button
-              onClick={onMenuToggle}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
-            >
-              ☰
-            </button>
-          )}
-        </div>
-      </div>
-    </header>
-  );
-};
-
-interface SidebarProps {
-  items: Array<{
-    icon: React.ReactNode;
-    label: string;
-    href: string;
-    badge?: number;
-  }>;
-  activeLocation?: string;
-  onItemClick?: (href: string) => void;
-  isOpen?: boolean;
-  onClose?: () => void;
-}
-
-export const Sidebar: React.FC<SidebarProps> = ({
-  items,
-  activeLocation,
-  onItemClick,
-  isOpen = true,
-  onClose,
-}) => {
-  return (
-    <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed md:static inset-y-0 left-0 z-40 w-64 bg-gray-900 text-white
-          transform transition-transform duration-300 md:transform-none
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
-      >
-        <div className="p-4 border-b border-gray-800">
-          <h2 className="text-xl font-bold">DeAIPro</h2>
-        </div>
-
-        <nav className="p-4 space-y-1 flex-1">
-          {items.map((item) => (
-            <button
-              key={item.href}
-              onClick={() => {
-                onItemClick?.(item.href);
-                onClose?.();
-              }}
-              className={`
-                w-full text-left px-4 py-3 rounded-lg flex items-center gap-3
-                transition-colors group
-                ${
-                  activeLocation === item.href
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-300 hover:bg-gray-800"
-                }
-              `}
-            >
-              <span className="text-lg">{item.icon}</span>
-              <span className="flex-1 font-medium">{item.label}</span>
-              {item.badge && item.badge > 0 && (
-                <span className="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-full">
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
-      </aside>
-    </>
-  );
-};
-
-interface FooterProps {
-  links?: Array<{ label: string; href: string }>;
-}
-
-export const Footer: React.FC<FooterProps> = ({ links }) => {
-  const currentYear = new Date().getFullYear();
-
-  return (
-    <footer className="bg-gray-900 text-gray-300 border-t border-gray-800 mt-12">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          <div>
-            <h3 className="text-white font-bold mb-4">DeAIPro</h3>
-            <p className="text-sm">
-              Real-time analytics and intelligence platform for the Bittensor ecosystem.
-            </p>
-          </div>
-
-          {/* Links columns */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Product</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Dashboard
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Analytics
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Research
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-white font-semibold mb-4">Resources</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Help
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-white font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Privacy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Terms
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Cookies
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between">
-          <p className="text-sm">
-            © {currentYear} DeAIPro. All rights reserved.
+export const Header: React.FC<HeaderProps> = ({ title, subtitle, actions }) => (
+  <div
+    style={{
+      padding: "20px 24px 0",
+      marginBottom: 4,
+    }}
+  >
+    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+      <div>
+        <h2
+          style={{
+            fontSize: 22,
+            fontWeight: 700,
+            color: "var(--text)",
+            margin: 0,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {title}
+        </h2>
+        {subtitle && (
+          <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4, marginBottom: 0 }}>
+            {subtitle}
           </p>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">
-              Twitter
-            </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">
-              Discord
-            </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">
-              GitHub
-            </a>
-          </div>
-        </div>
+        )}
       </div>
-    </footer>
-  );
-};
+      {actions && <div>{actions}</div>}
+    </div>
+  </div>
+);
+
+// ── Container ─────────────────────────────────────────────────────────────────
 
 interface ContainerProps {
   children: React.ReactNode;
   className?: string;
 }
 
-export const Container: React.FC<ContainerProps> = ({
-  children,
-  className = "",
-}) => {
-  return (
-    <div className={`max-w-7xl mx-auto px-4 py-8 ${className}`}>
-      {children}
-    </div>
-  );
-};
+export const Container: React.FC<ContainerProps> = ({ children }) => (
+  <div style={{ padding: "20px 24px 40px" }}>{children}</div>
+);
+
+// ── Grid ──────────────────────────────────────────────────────────────────────
 
 interface GridProps {
   children: React.ReactNode;
@@ -239,89 +350,22 @@ interface GridProps {
   className?: string;
 }
 
-export const Grid: React.FC<GridProps> = ({
-  children,
-  columns = 3,
-  gap = "md",
-  className = "",
-}) => {
-  const colClasses = {
-    1: "grid-cols-1",
-    2: "grid-cols-1 md:grid-cols-2",
-    3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-    4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
-  };
-
-  const gapClasses = {
-    sm: "gap-2",
-    md: "gap-4",
-    lg: "gap-6",
-  };
-
+export const Grid: React.FC<GridProps> = ({ children, columns = 3, gap = "md" }) => {
+  const gapPx = { sm: 8, md: 16, lg: 24 }[gap];
   return (
-    <div className={`grid ${colClasses[columns]} ${gapClasses[gap]} ${className}`}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+        gap: gapPx,
+      }}
+    >
       {children}
     </div>
   );
 };
 
-interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}
-
-export const Pagination: React.FC<PaginationProps> = ({
-  currentPage,
-  totalPages,
-  onPageChange,
-}) => {
-  return (
-    <div className="flex items-center justify-center gap-2 mt-6">
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-      >
-        ← Previous
-      </Button>
-
-      <div className="flex items-center gap-1">
-        {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
-          const page = i + Math.max(1, currentPage - 2);
-          if (page > totalPages) return null;
-
-          return (
-            <button
-              key={page}
-              onClick={() => onPageChange(page)}
-              className={`
-                px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                ${
-                  currentPage === page
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-900 hover:bg-gray-300"
-                }
-              `}
-            >
-              {page}
-            </button>
-          );
-        })}
-      </div>
-
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-      >
-        Next →
-      </Button>
-    </div>
-  );
-};
+// ── Empty State ───────────────────────────────────────────────────────────────
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -330,21 +374,74 @@ interface EmptyStateProps {
   action?: React.ReactNode;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({
-  icon = "📭",
-  title,
-  message,
-  action,
-}) => {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="text-4xl mb-4">{icon}</div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600 mb-6 max-w-md">{message}</p>
-      {action && action}
-    </div>
-  );
-};
+export const EmptyState: React.FC<EmptyStateProps> = ({ icon = "📭", title, message, action }) => (
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "64px 24px",
+      textAlign: "center",
+      background: "var(--surface)",
+      borderRadius: 12,
+      border: "1px solid var(--border)",
+    }}
+  >
+    <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.5 }}>{icon}</div>
+    <h3 style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>{title}</h3>
+    <p style={{ fontSize: 13, color: "var(--text-muted)", maxWidth: 320 }}>{message}</p>
+    {action && <div style={{ marginTop: 20 }}>{action}</div>}
+  </div>
+);
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+export const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => (
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 24 }}>
+    <PageBtn disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)}>← Prev</PageBtn>
+    {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+      const page = i + Math.max(1, currentPage - 2);
+      if (page > totalPages) return null;
+      return (
+        <PageBtn key={page} active={page === currentPage} onClick={() => onPageChange(page)}>
+          {page}
+        </PageBtn>
+      );
+    })}
+    <PageBtn disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)}>Next →</PageBtn>
+  </div>
+);
+
+const PageBtn: React.FC<{ children: React.ReactNode; onClick: () => void; disabled?: boolean; active?: boolean }> = ({
+  children, onClick, disabled, active,
+}) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    style={{
+      padding: "6px 12px",
+      borderRadius: 8,
+      border: "1px solid var(--border)",
+      background: active ? "var(--accent)" : "var(--surface-2)",
+      color: active ? "#fff" : "var(--text-muted)",
+      fontSize: 13,
+      cursor: disabled ? "not-allowed" : "pointer",
+      opacity: disabled ? 0.4 : 1,
+      transition: "all 0.15s",
+    }}
+  >
+    {children}
+  </button>
+);
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
 
 interface ModalProps {
   isOpen: boolean;
@@ -355,58 +452,22 @@ interface ModalProps {
   size?: "sm" | "md" | "lg";
 }
 
-export const Modal: React.FC<ModalProps> = ({
-  isOpen,
-  onClose,
-  title,
-  children,
-  footer,
-  size = "md",
-}) => {
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer, size = "md" }) => {
   if (!isOpen) return null;
-
-  const sizes = {
-    sm: "max-w-sm",
-    md: "max-w-md",
-    lg: "max-w-lg",
-  };
-
+  const maxWidth = { sm: 400, md: 520, lg: 680 }[size];
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div
-        className={`
-          relative bg-white rounded-lg shadow-lg
-          ${sizes[size]} w-full mx-4
-        `}
-      >
-        {/* Header */}
-        <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", width: "100%", maxWidth, boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid var(--border)" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--text)", margin: 0 }}>{title}</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 18, cursor: "pointer" }}>✕</button>
         </div>
-
-        {/* Body */}
-        <div className="px-6 py-4 max-h-96 overflow-y-auto">
-          {children}
-        </div>
-
-        {/* Footer */}
+        <div style={{ padding: "20px", maxHeight: 400, overflowY: "auto" }}>{children}</div>
         {footer && (
-          <div className="border-t border-gray-200 px-6 py-4 flex justify-end gap-2">
-            {footer}
-          </div>
+          <div style={{ padding: "16px 20px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", gap: 8 }}>{footer}</div>
         )}
       </div>
     </div>
