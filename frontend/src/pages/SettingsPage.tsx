@@ -33,10 +33,145 @@ const TESTABLE: Record<string, "taostats" | "coingecko" | "github" | "sendgrid">
   SENDGRID_API_KEY:  "sendgrid",
 };
 
+// ── Integration card metadata ─────────────────────────────────────────────────
+
+interface IntegrationMeta {
+  label: string;
+  description: string;
+  logoBg: string;
+  logoText: string;
+  logoColor: string;
+}
+
+const INTEGRATION_META: Record<string, IntegrationMeta> = {
+  TAOSTATS_API_KEY: {
+    label: "TaoStats",
+    description: "Bittensor Network Data — Subnet & validator analytics",
+    logoBg: "#1a1f3a",
+    logoText: "τ",
+    logoColor: "#6ee7f7",
+  },
+  COINGECKO_API_KEY: {
+    label: "CoinGecko",
+    description: "Price Data Service — TAO market price & history",
+    logoBg: "#1a2e1a",
+    logoText: "🦎",
+    logoColor: "#8cc63f",
+  },
+  GITHUB_API_TOKEN: {
+    label: "GitHub",
+    description: "Repository Service — Commit activity & code metrics",
+    logoBg: "#1a1a1a",
+    logoText: "⌥",
+    logoColor: "#e6edf3",
+  },
+  SENDGRID_API_KEY: {
+    label: "SendGrid",
+    description: "Email Delivery — Transactional & notification emails",
+    logoBg: "#0d1f2e",
+    logoText: "✉",
+    logoColor: "#1a82e2",
+  },
+};
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 const PAGE: React.CSSProperties = { padding: "20px 24px 40px", display: "flex", flexDirection: "column", gap: 24 };
 const SECTION_TITLE = "Staff-only. Changes take effect on the next background service cycle.";
+
+// ── Integration card (data_sources view)
+interface IntegrationCardProps {
+  entry: ConfigEntry;
+  onSaved: (key: string, value: string) => void;
+}
+
+const IntegrationCard: React.FC<IntegrationCardProps> = ({ entry, onSaved }) => {
+  const [open, setOpen] = useState(false);
+  const meta = INTEGRATION_META[entry.key];
+
+  return (
+    <div style={{
+      background: "var(--surface-2)",
+      border: "1px solid var(--border)",
+      borderRadius: 14,
+      overflow: "hidden",
+      transition: "border-color 0.15s",
+    }}
+      onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border-hover, var(--accent))"}
+      onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"}
+    >
+      {/* Card header */}
+      <div style={{ padding: "20px 20px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* Top row: logo + actions */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          {/* Logo box */}
+          <div style={{
+            width: 52, height: 52, borderRadius: 10,
+            background: meta?.logoBg ?? "var(--surface-3)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: meta?.logoText.length === 1 && !/\p{Emoji}/u.test(meta.logoText) ? 24 : 20,
+            color: meta?.logoColor ?? "var(--text)",
+            fontWeight: 700, letterSpacing: -1,
+            flexShrink: 0,
+          }}>
+            {meta?.logoText ?? "?"}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              onClick={() => setOpen(o => !o)}
+              title="Settings"
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: open ? "var(--accent-glow)" : "var(--surface-3)",
+                border: `1px solid ${open ? "var(--accent)" : "var(--border)"}`,
+                color: open ? "var(--accent-light)" : "var(--text-muted)",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 14, transition: "all 0.15s",
+              }}
+            >
+              ⚙
+            </button>
+            <button
+              onClick={() => setOpen(o => !o)}
+              style={{
+                padding: "6px 16px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                background: open ? "var(--accent)" : "var(--surface-3)",
+                border: `1px solid ${open ? "var(--accent)" : "var(--border)"}`,
+                color: open ? "#fff" : "var(--text-muted)",
+                cursor: "pointer", transition: "all 0.15s",
+              }}
+            >
+              {open ? "Close" : "Details"}
+            </button>
+          </div>
+        </div>
+
+        {/* Name + description */}
+        <div>
+          <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: "var(--text)" }}>
+            {meta?.label ?? entry.label}
+          </p>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--text-dim)" }}>
+            {meta?.description ?? ""}
+          </p>
+        </div>
+      </div>
+
+      {/* Expandable detail panel */}
+      {open && (
+        <div style={{
+          borderTop: "1px solid var(--border-subtle)",
+          padding: "16px 20px 20px",
+          background: "var(--surface)",
+        }}>
+          <ConfigRow entry={entry} onSaved={onSaved} borderless />
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ── Test result badge
 interface TestResult { ok: boolean; latency_ms: number | null; detail: string }
@@ -85,9 +220,10 @@ const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void; disab
 interface ConfigRowProps {
   entry: ConfigEntry;
   onSaved: (key: string, value: string) => void;
+  borderless?: boolean;
 }
 
-const ConfigRow: React.FC<ConfigRowProps> = ({ entry, onSaved }) => {
+const ConfigRow: React.FC<ConfigRowProps> = ({ entry, onSaved, borderless }) => {
   const [value, setValue]         = useState(entry.value);
   const [revealed, setRevealed]   = useState(false);
   const [saving, setSaving]       = useState(false);
@@ -142,7 +278,7 @@ const ConfigRow: React.FC<ConfigRowProps> = ({ entry, onSaved }) => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "16px 0", borderBottom: "1px solid var(--border-subtle)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: borderless ? "0" : "16px 0", borderBottom: borderless ? "none" : "1px solid var(--border-subtle)" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{entry.label}</label>
         {entry.updated_by && (
@@ -418,6 +554,12 @@ export const SettingsPage: React.FC = () => {
             entries.map(entry => (
               <FlagRow key={entry.key} entry={entry} onSaved={handleSaved} />
             ))
+          ) : activeCategory === "data_sources" ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginTop: 8 }}>
+              {entries.map(entry => (
+                <IntegrationCard key={entry.key} entry={entry} onSaved={handleSaved} />
+              ))}
+            </div>
           ) : (
             entries.map(entry => (
               <ConfigRow key={entry.key} entry={entry} onSaved={handleSaved} />
