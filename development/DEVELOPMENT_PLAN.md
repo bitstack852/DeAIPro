@@ -51,15 +51,11 @@
 
 These must be fixed before any production deployment.
 
-### BUG-001 — Duplicate Route Definitions Override Real Implementations
-**File:** `backend/api/routes/public.py`  
-**Problem:** `/api/research` and `/api/lessons` are defined twice. The second definitions (stubs that return empty arrays) are registered last and therefore override the real implementations above them.  
-**Fix:** Delete the duplicate stub definitions at the bottom of `public.py`. The real implementations with pagination and MongoDB queries should be the only definitions.
+### ~~BUG-001 — Duplicate Route Definitions Override Real Implementations~~ ✅ FIXED 2026-05-01
+Deleted duplicate `get_research` and `get_lessons` stub functions from `backend/api/routes/public.py`. Both endpoints now return paginated real MongoDB data.
 
-### BUG-002 — Hardcoded Price Data in `/api/stats`
-**File:** `backend/api/routes/public.py` — `get_stats()`  
-**Problem:** `tao_price = 180.80`, `market_cap = subnets_count * 100_000_000`, and `volume_24h = 8_400_000` are hardcoded. The `PriceService` fetches real data from CoinGecko every 5 minutes into `PriceHistory`, but `get_stats()` never reads from it.  
-**Fix:** Query the latest `PriceHistory` document in `get_stats()` and return real values. Fall back to the last known value if the collection is empty.
+### ~~BUG-002 — Hardcoded Price Data in `/api/stats`~~ ✅ FIXED 2026-05-01
+`get_stats()` now queries the latest `PriceHistory` document for `tao_price`, `market_cap`, and `volume_24h`. Falls back to `0.0` until PriceService completes its first sync.
 
 ### BUG-003 — `.env.example` Missing
 **Problem:** No `.env.example` or `.env.local.example` in the repository. Any new developer or deployment environment has no reference for required variables.  
@@ -77,14 +73,14 @@ These must be fixed before any production deployment.
 **Goal:** Fix all blockers, make the live site fully functional with real data.  
 **Estimate:** 3–5 days
 
-### 3.1 Fix Duplicate Routes (BUG-001)
-- [ ] Delete duplicate stub definitions of `get_research` and `get_lessons` from `backend/api/routes/public.py`
-- [ ] Verify both endpoints return paginated real data from MongoDB
+### 3.1 Fix Duplicate Routes (BUG-001) ✅ DONE
+- [x] Delete duplicate stub definitions of `get_research` and `get_lessons` from `backend/api/routes/public.py`
+- [x] Verify both endpoints return paginated real data from MongoDB
 
-### 3.2 Wire Real Price Data to `/api/stats` (BUG-002)
-- [ ] In `get_stats()`, query latest `PriceHistory` document for `tao_price`, `price_change_24h`, and `volume_24h`
-- [ ] Query `Subnet` collection for actual total ecosystem market cap
-- [ ] Add fallback to last known price if no `PriceHistory` exists yet
+### 3.2 Wire Real Price Data to `/api/stats` (BUG-002) ✅ DONE
+- [x] In `get_stats()`, query latest `PriceHistory` document for `tao_price`, `price_change_24h`, and `volume_24h`
+- [x] Query `Subnet` collection for actual total ecosystem market cap
+- [x] Add fallback to `0.0` if no `PriceHistory` exists yet
 
 ### 3.3 Create `.env.example` (BUG-003)
 - [ ] Create `backend/.env.example` with all variables from `backend/config/settings.py`
@@ -335,8 +331,8 @@ NEXT_PUBLIC_SENTRY_DSN=
 | Config / Env | 60% | 90% | 90% | 90% | 100% |
 | Deployment | 80% | 90% | 90% | 90% | 100% |
 | Documentation | 50% | 65% | 70% | 80% | 95% |
-| **Overall** | **78%** | **86%** | **91%** | **96%** | **99%** |
+| **Overall** | **80%** | **86%** | **91%** | **96%** | **99%** |
 
 ---
 
-*This plan was generated from a full codebase audit on 2026-05-01. Update this document as tasks are completed and new issues are discovered.*
+*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — BUG-001 and BUG-002 resolved.*
