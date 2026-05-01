@@ -88,7 +88,8 @@ export const usePaginatedItems = <T,>(
  */
 export const useUniqueCategories = (subnets: Subnet[]) => {
   return useMemo(() => {
-    const categories = new Set(subnets.map((s) => s.cat));
+    const safe = Array.isArray(subnets) ? subnets : [];
+    const categories = new Set(safe.map((s) => s.cat));
     return Array.from(categories).sort();
   }, [subnets]);
 };
@@ -98,7 +99,8 @@ export const useUniqueCategories = (subnets: Subnet[]) => {
  */
 export const useSubnetStats = (subnets: Subnet[]) => {
   return useMemo(() => {
-    if (subnets.length === 0) {
+    const safe = Array.isArray(subnets) ? subnets : [];
+    if (safe.length === 0) {
       return {
         totalMarketCap: 0,
         averageScore: 0,
@@ -109,13 +111,13 @@ export const useSubnetStats = (subnets: Subnet[]) => {
       };
     }
 
-    const marketCaps = subnets.map((s) => s.mc).sort((a, b) => a - b);
-    const scores = subnets.map((s) => s.score);
+    const marketCaps = safe.map((s) => s.mc).sort((a, b) => a - b);
+    const scores = safe.map((s) => s.score);
 
-    const totalMarketCap = subnets.reduce((sum, s) => sum + s.mc, 0);
+    const totalMarketCap = safe.reduce((sum, s) => sum + s.mc, 0);
     const averageScore = scores.reduce((sum, s) => sum + s, 0) / scores.length;
     const medianMarketCap = marketCaps[Math.floor(marketCaps.length / 2)];
-    const totalEmissions = subnets.reduce((sum, s) => sum + s.em, 0);
+    const totalEmissions = safe.reduce((sum, s) => sum + s.em, 0);
     const highestScore = Math.max(...scores);
     const lowestScore = Math.min(...scores);
 
@@ -176,7 +178,8 @@ export const useTrendIndicator = (current: number, previous: number) => {
 export const useSubnetById = (subnets: Subnet[], id: number | undefined) => {
   return useMemo(() => {
     if (!id) return null;
-    return subnets.find((s) => s.id === id) || null;
+    const safe = Array.isArray(subnets) ? subnets : [];
+    return safe.find((s) => s.id === id) || null;
   }, [subnets, id]);
 };
 
@@ -240,10 +243,11 @@ export const useSearchSubnets = (
   searchTerm: string
 ) => {
   return useMemo(() => {
-    if (!searchTerm) return subnets;
+    const safe = Array.isArray(subnets) ? subnets : [];
+    if (!searchTerm) return safe;
 
     const term = searchTerm.toLowerCase();
-    return subnets.filter(
+    return safe.filter(
       (s) =>
         s.n.toLowerCase().includes(term) ||
         s.cat.toLowerCase().includes(term)
@@ -257,8 +261,9 @@ export const useSearchSubnets = (
 export const useSubnetsByCategory = (subnets: Subnet[]) => {
   return useMemo(() => {
     const grouped: { [key: string]: Subnet[] } = {};
+    const safe = Array.isArray(subnets) ? subnets : [];
 
-    subnets.forEach((subnet) => {
+    safe.forEach((subnet) => {
       if (!grouped[subnet.cat]) {
         grouped[subnet.cat] = [];
       }
