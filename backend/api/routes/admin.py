@@ -2,6 +2,7 @@
 Admin-only routes — requires @deaistrategies.io Firebase account
 """
 
+import asyncio
 import time
 from datetime import datetime
 from typing import Optional
@@ -341,3 +342,52 @@ async def test_sendgrid(
         headers={"Authorization": f"Bearer {key}"},
     )
     return result
+
+
+@router.post("/config/test/smtp")
+@limiter.limit("10/minute")
+async def test_smtp(
+    request: Request,
+    current_user: CurrentUser = Depends(require_staff),
+):
+    """Test custom SMTP credentials by opening a connection and authenticating."""
+    host = await config_service.get("SMTP_HOST")
+    port_str = await config_service.get("SMTP_PORT")
+    username = await config_service.get("SMTP_USERNAME")
+    password = await config_service.get("SMTP_PASSWORD")
+
+    if not host:
+        return {"ok": False, "latency_ms": None, "detail": "No SMTP host configured"}
+
+    port = int(port_str) if port_str.isdigit() else 587
+    start = time.monotonic()
+    try:
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(host, port), timeout=10
+        )
+        # Read server greeting
+        await asyncio.wait_for(reader.readline(), timeout=5)
+        latency_ms = round((time.monotonic() - start) * 1000)
+
+        if username and password:
+            import base64
+            writer.write(b"EHLO deaipro\r\n")
+            await asyncio.wait_for(reader.read(1024), timeout=5)
+            writer.write(b"AUTH LOGIN\r\n")
+            await asyncio.wait_for(reader.read(1024), timeout=5)
+            writer.write(base64.b64encode(username.encode()) + b"\r\n")
+            await asyncio.wait_for(reader.read(1024), timeout=5)
+            writer.write(base64.b64encode(password.encode()) + b"\r\n")
+            resp = await asyncio.wait_for(reader.read(1024), timeout=5)
+            writer.close()
+            resp_text = resp.decode(errors="replace").strip()
+            if resp_text.startswith("235"):
+                return {"ok": True, "latency_ms": latency_ms, "detail": "Authenticated successfully"}
+            return {"ok": False, "latency_ms": latency_ms, "detail": f"Auth failed: {resp_text[:80]}"}
+
+        writer.close()
+        return {"ok": True, "latency_ms": latency_ms, "detail": f"Connected to {host}:{port}"}
+    except asyncio.TimeoutError:
+        return {"ok": False, "latency_ms": None, "detail": f"Connection to {host}:{port} timed out"}
+    except Exception as e:
+        return {"ok": False, "latency_ms": None, "detail": str(e)[:120]}

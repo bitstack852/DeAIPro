@@ -25,7 +25,7 @@ const CATEGORIES: Array<{ key: string; label: string; icon: string }> = [
   { key: "feature_flags",  label: "Feature Flags",   icon: "🚩" },
 ];
 
-const TESTABLE: Record<string, "taostats" | "coingecko" | "github" | "sendgrid"> = {
+const TESTABLE: Record<string, "taostats" | "coingecko" | "github" | "sendgrid" | "smtp"> = {
   TAOSTATS_API_KEY:  "taostats",
   COINGECKO_API_KEY: "coingecko",
   GITHUB_API_TOKEN:  "github",
@@ -72,6 +72,43 @@ const INTEGRATION_META: Record<string, IntegrationMeta> = {
     logoColor: "#1a82e2",
   },
 };
+
+// ── Notification card groups ──────────────────────────────────────────────────
+// Maps a virtual card id → the config keys it groups + which service to test
+
+interface NotifCardDef {
+  id: string;
+  label: string;
+  description: string;
+  logoBg: string;
+  logoText: string;
+  logoColor: string;
+  keys: string[];
+  testService: "sendgrid" | "smtp";
+}
+
+const NOTIF_CARDS: NotifCardDef[] = [
+  {
+    id: "sendgrid",
+    label: "SendGrid",
+    description: "Managed email delivery — API-driven transactional emails",
+    logoBg: "#0d1f2e",
+    logoText: "✉",
+    logoColor: "#1a82e2",
+    keys: ["SENDGRID_API_KEY", "NOTIFICATION_SENDER_EMAIL", "NOTIFICATION_RECIPIENTS"],
+    testService: "sendgrid",
+  },
+  {
+    id: "smtp",
+    label: "Custom Email",
+    description: "Use your own SMTP server — Gmail, Outlook, or self-hosted",
+    logoBg: "#1e1a2e",
+    logoText: "📨",
+    logoColor: "#a78bfa",
+    keys: ["SMTP_HOST", "SMTP_PORT", "SMTP_USERNAME", "SMTP_PASSWORD", "SMTP_FROM_EMAIL"],
+    testService: "smtp",
+  },
+];
 
 // ── Shared types ──────────────────────────────────────────────────────────────
 
@@ -395,6 +432,266 @@ const IntegrationCard: React.FC<IntegrationCardProps> = ({ entry, onSaved }) => 
           onClose={() => setModalOpen(false)}
           onSaved={(key, val) => { onSaved(key, val); setModalOpen(false); }}
         />
+      )}
+    </>
+  );
+};
+
+// ── Notification card (multi-field modal) ─────────────────────────────────────
+
+interface NotifCardProps {
+  card: NotifCardDef;
+  entries: ConfigEntry[];
+  onSaved: (key: string, value: string) => void;
+}
+
+const NotifCard: React.FC<NotifCardProps> = ({ card, entries, onSaved }) => {
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Per-key state managed as maps so we can handle multiple fields
+  const [values, setValues]     = useState<Record<string, string>>(() =>
+    Object.fromEntries(entries.map(e => [e.key, e.value]))
+  );
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [saving, setSaving]     = useState(false);
+  const [saveMsg, setSaveMsg]   = useState<{ ok: boolean; text: string } | null>(null);
+  const [testing, setTesting]   = useState(false);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
+  const testTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isDirty = entries.some(e => values[e.key] !== e.value);
+
+  const handleSaveAll = async () => {
+    const token = await getFreshToken();
+    if (!token) return;
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      for (const e of entries) {
+        if (values[e.key] !== e.value) {
+          await updateAdminConfig(e.key, values[e.key], token);
+          onSaved(e.key, values[e.key]);
+        }
+      }
+      setSaveMsg({ ok: true, text: "Saved successfully" });
+    } catch (err: any) {
+      setSaveMsg({ ok: false, text: err.message || "Save failed" });
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveMsg(null), 4000);
+    }
+  };
+
+  const handleTest = async () => {
+    const token = await getFreshToken();
+    if (!token) return;
+    setTesting(true);
+    setTestResult(null);
+    if (testTimeout.current) clearTimeout(testTimeout.current);
+    try {
+      const result = await testAdminConfig(card.testService, token);
+      setTestResult(result);
+      testTimeout.current = setTimeout(() => setTestResult(null), 30_000);
+    } catch {
+      setTestResult({ ok: false, latency_ms: null, detail: "Request failed" });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  return (
+    <>
+      <div style={{
+        background: "var(--surface-2)",
+        border: "1px solid var(--border)",
+        borderRadius: 14,
+        padding: "20px",
+        display: "flex", flexDirection: "column", gap: 14,
+        transition: "border-color 0.15s",
+      }}
+        onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"}
+        onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"}
+      >
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 10,
+            background: card.logoBg,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 22, color: card.logoColor, fontWeight: 700, flexShrink: 0,
+          }}>
+            {card.logoText}
+          </div>
+          <button
+            onClick={() => setModalOpen(true)}
+            title="Settings"
+            style={{
+              width: 34, height: 34, borderRadius: 8,
+              background: "var(--surface-3)", border: "1px solid var(--border)",
+              color: "var(--text-muted)", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 15, transition: "all 0.15s",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = "var(--accent-glow)";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)";
+              (e.currentTarget as HTMLElement).style.color = "var(--accent-light)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = "var(--surface-3)";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
+              (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
+            }}
+          >
+            ⚙
+          </button>
+        </div>
+        <div>
+          <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{card.label}</p>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--text-dim)", lineHeight: 1.5 }}>{card.description}</p>
+        </div>
+      </div>
+
+      {modalOpen && (
+        <div
+          onClick={() => setModalOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            backdropFilter: "blur(4px)",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "var(--surface)", border: "1px solid var(--border)",
+              borderRadius: 16, width: "100%", maxWidth: 500,
+              margin: "0 16px",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
+              overflow: "hidden", maxHeight: "90vh", overflowY: "auto",
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              padding: "20px 24px 18px", borderBottom: "1px solid var(--border-subtle)",
+              display: "flex", alignItems: "center", gap: 16, position: "sticky", top: 0,
+              background: "var(--surface)", zIndex: 1,
+            }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 10, flexShrink: 0,
+                background: card.logoBg,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 22, color: card.logoColor, fontWeight: 700,
+              }}>
+                {card.logoText}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: "0 0 2px", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>{card.label}</p>
+                <p style={{ margin: 0, fontSize: 12, color: "var(--text-dim)" }}>{card.description}</p>
+              </div>
+              <button
+                onClick={() => setModalOpen(false)}
+                style={{
+                  width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                  background: "var(--surface-3)", border: "1px solid var(--border)",
+                  color: "var(--text-muted)", cursor: "pointer", fontSize: 16,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >✕</button>
+            </div>
+
+            {/* Fields */}
+            <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+              {entries.map(entry => (
+                <div key={entry.key}>
+                  <label style={{
+                    fontSize: 11, fontWeight: 600, color: "var(--text-muted)",
+                    display: "block", marginBottom: 6,
+                    textTransform: "uppercase", letterSpacing: "0.06em",
+                  }}>
+                    {entry.label}
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={entry.is_secret && !revealed[entry.key] ? "password" : "text"}
+                      value={values[entry.key] ?? ""}
+                      onChange={e => setValues(v => ({ ...v, [entry.key]: e.target.value }))}
+                      placeholder={entry.is_secret ? "Enter value…" : ""}
+                      style={{
+                        width: "100%", padding: "9px 12px",
+                        paddingRight: entry.is_secret ? 40 : 12,
+                        borderRadius: 8,
+                        border: `1px solid ${values[entry.key] !== entry.value ? "var(--accent)" : "var(--border)"}`,
+                        background: "var(--surface-2)",
+                        color: "var(--text)", fontSize: 13,
+                        outline: "none", transition: "border-color 0.15s",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    {entry.is_secret && (
+                      <button
+                        onClick={() => setRevealed(r => ({ ...r, [entry.key]: !r[entry.key] }))}
+                        style={{
+                          position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                          background: "none", border: "none", cursor: "pointer",
+                          color: "var(--text-dim)", fontSize: 14, padding: 0,
+                        }}
+                        title={revealed[entry.key] ? "Hide" : "Show"}
+                      >
+                        {revealed[entry.key] ? "🙈" : "👁"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {/* Test result */}
+              {testResult && (
+                <div><TestBadge result={testResult} /></div>
+              )}
+
+              {/* Save message */}
+              {saveMsg && (
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: saveMsg.ok ? "var(--success)" : "var(--danger)" }}>
+                  {saveMsg.ok ? "✓" : "✕"} {saveMsg.text}
+                </p>
+              )}
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 10, paddingTop: 4 }}>
+                <button
+                  onClick={handleTest}
+                  disabled={testing}
+                  style={{
+                    flex: 1, padding: "10px 0", borderRadius: 9, fontSize: 13, fontWeight: 600,
+                    border: "1px solid var(--border)", background: "var(--surface-2)",
+                    color: testing ? "var(--text-dim)" : "var(--text-muted)",
+                    cursor: testing ? "not-allowed" : "pointer", transition: "all 0.15s",
+                  }}
+                >
+                  {testing ? "Testing…" : "Test Connection"}
+                </button>
+                <button
+                  onClick={handleSaveAll}
+                  disabled={!isDirty || saving}
+                  style={{
+                    flex: 1, padding: "10px 0", borderRadius: 9, fontSize: 13, fontWeight: 600,
+                    border: "none",
+                    background: isDirty && !saving
+                      ? "linear-gradient(135deg, var(--accent), var(--accent-light))"
+                      : "var(--surface-3)",
+                    color: isDirty && !saving ? "#fff" : "var(--text-dim)",
+                    cursor: isDirty && !saving ? "pointer" : "not-allowed",
+                    transition: "all 0.15s",
+                    boxShadow: isDirty && !saving ? "0 2px 12px var(--accent-glow)" : "none",
+                  }}
+                >
+                  {saving ? "Saving…" : "Save"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
@@ -748,6 +1045,15 @@ export const SettingsPage: React.FC = () => {
             {entries.map(entry => (
               <IntegrationCard key={entry.key} entry={entry} onSaved={handleSaved} />
             ))}
+          </div>
+        ) : activeCategory === "notifications" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+            {NOTIF_CARDS.map(card => {
+              const cardEntries = entries.filter(e => card.keys.includes(e.key));
+              return (
+                <NotifCard key={card.id} card={card} entries={cardEntries} onSaved={handleSaved} />
+              );
+            })}
           </div>
         ) : (
           entries.map(entry => <ConfigRow key={entry.key} entry={entry} onSaved={handleSaved} />)

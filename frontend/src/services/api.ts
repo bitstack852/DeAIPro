@@ -286,7 +286,7 @@ export const updateAdminConfig = async (
 };
 
 export const testAdminConfig = async (
-  service: "taostats" | "coingecko" | "github" | "sendgrid",
+  service: "taostats" | "coingecko" | "github" | "sendgrid" | "smtp",
   token: string
 ): Promise<{ ok: boolean; latency_ms: number | null; detail: string }> => {
   const response = await fetch(`${API_BASE_URL}/admin/config/test/${service}`, {
