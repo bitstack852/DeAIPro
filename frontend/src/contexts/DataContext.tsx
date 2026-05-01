@@ -356,8 +356,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => clearInterval(interval);
   }, [syncData]);
 
-  // Firebase Auth listener
+  // Firebase Auth listener — skipped if Firebase is not configured
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // User is signed in
