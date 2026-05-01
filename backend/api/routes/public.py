@@ -46,7 +46,7 @@ async def get_stats(request: Request):
         
         # Fetch latest TAO price from PriceHistory (written by PriceService every 5 min)
         latest_price = await PriceHistory.find(
-            PriceHistory.symbol == "TAO"
+            PriceHistory.symbol == "TAO/USD"
         ).sort([("timestamp", -1)]).first_or_none()
 
         tao_price = latest_price.close if latest_price else 0.0

@@ -38,7 +38,7 @@ class GitHubService(BaseService):
 
         try:
             await self.update_sync_state(SyncStatus.RUNNING)
-            await self.log_sync("github_sync_started", event="sync_start")
+            await self.log_sync("github_sync_started")
 
             # Get all subnets with GitHub URLs
             subnets = await Subnet.find(Subnet.github_url != "").to_list(None)
@@ -74,7 +74,6 @@ class GitHubService(BaseService):
             )
             await self.log_sync(
                 "github_sync_complete",
-                event="sync_complete",
                 subnets_updated=records_updated,
                 duration_seconds=duration,
             )

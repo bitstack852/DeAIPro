@@ -39,7 +39,7 @@ class MetagraphService(BaseService):
         
         try:
             await self.update_sync_state(SyncStatus.RUNNING)
-            await self.log_sync("metagraph_sync_started", event="sync_start")
+            await self.log_sync("metagraph_sync_started")
 
             # Fetch subnets and update local copy
             updated = await self._fetch_and_update_subnets()
@@ -56,7 +56,6 @@ class MetagraphService(BaseService):
             )
             await self.log_sync(
                 "metagraph_sync_complete",
-                event="sync_complete",
                 subnets_updated=updated,
                 duration_seconds=duration,
             )

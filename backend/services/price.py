@@ -37,7 +37,7 @@ class PriceService(BaseService):
 
         try:
             await self.update_sync_state(SyncStatus.RUNNING)
-            await self.log_sync("price_sync_started", event="sync_start")
+            await self.log_sync("price_sync_started")
 
             # Fetch current price
             price_data = await self._fetch_current_price()
@@ -57,7 +57,6 @@ class PriceService(BaseService):
             )
             await self.log_sync(
                 "price_sync_complete",
-                event="sync_complete",
                 price_usd=price_data.get("usd") if price_data else None,
                 duration_seconds=duration,
             )
