@@ -3,148 +3,119 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  @apply box-border;
+/* ── Theme tokens ─────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --bg:              #0b0d1a;
+  --surface:         #10131f;
+  --surface-2:       #161929;
+  --surface-3:       #1c2035;
+  --border:          rgba(91, 94, 244, 0.15);
+  --border-subtle:   rgba(255, 255, 255, 0.06);
+  --text:            #dde4f8;
+  --text-muted:      #8492be;
+  --text-dim:        #3d4870;
+  --accent:          #5b5ef4;
+  --accent-hover:    #6c6ff5;
+  --accent-light:    #7c7fff;
+  --accent-glow:     rgba(91, 94, 244, 0.15);
+  --success:         #10b981;
+  --success-bg:      rgba(16, 185, 129, 0.12);
+  --warning:         #f59e0b;
+  --warning-bg:      rgba(245, 158, 11, 0.12);
+  --danger:          #ef4444;
+  --danger-bg:       rgba(239, 68, 68, 0.12);
+  --scrollbar-track: #10131f;
+  --scrollbar-thumb: #2a3050;
 }
 
-html {
-  scroll-behavior: smooth;
+[data-theme="light"] {
+  --bg:              #f4f6fb;
+  --surface:         #ffffff;
+  --surface-2:       #f0f2f8;
+  --surface-3:       #e8ecf4;
+  --border:          rgba(91, 94, 244, 0.12);
+  --border-subtle:   rgba(0, 0, 0, 0.07);
+  --text:            #1a1f36;
+  --text-muted:      #64748b;
+  --text-dim:        #94a3b8;
+  --accent:          #5b5ef4;
+  --accent-hover:    #4a4de0;
+  --accent-light:    #7c7fff;
+  --accent-glow:     rgba(91, 94, 244, 0.08);
+  --success:         #059669;
+  --success-bg:      rgba(5, 150, 105, 0.08);
+  --warning:         #d97706;
+  --warning-bg:      rgba(217, 119, 6, 0.08);
+  --danger:          #dc2626;
+  --danger-bg:       rgba(220, 38, 38, 0.08);
+  --scrollbar-track: #f0f2f8;
+  --scrollbar-thumb: #c1c9e0;
 }
+
+/* ── Base ─────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
-  @apply bg-gray-50 text-gray-900;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
+/* ── Scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
+/* ── Animations ───────────────────────────────────────── */
+@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shimmer  { 0% { background-position: -600px 0; } 100% { background-position: 600px 0; } }
+@keyframes spin     { to { transform: rotate(360deg); } }
+@keyframes pulse    { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-@keyframes slideIn {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
+.animate-fadeIn  { animation: fadeIn  0.25s ease; }
+.animate-slideUp { animation: slideUp 0.25s ease; }
+.animate-pulse   { animation: pulse   2s infinite; }
+.animate-spin    { animation: spin    0.75s linear infinite; }
 
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-.animate-slideIn {
-  animation: slideIn 0.3s ease-in-out;
-}
-
-.shimmer {
-  animation: shimmer 2s infinite;
+/* ── Skeleton shimmer ─────────────────────────────────── */
+.skeleton {
   background: linear-gradient(
-    to right,
-    #f0f0f0 0%,
-    #f9f9f9 50%,
-    #f0f0f0 100%
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 50%,
+    var(--surface-2) 75%
   );
-  background-size: 1000px 100%;
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite;
 }
 
-.badge-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Utility Classes */
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.truncate-lines {
+/* ── Utilities ────────────────────────────────────────── */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.truncate-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Form Styling */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type='number'] {
-  -moz-appearance: textfield;
-}
-
-/* Focus Styles */
+/* ── Focus ────────────────────────────────────────────── */
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  @apply outline-none ring-2 ring-offset-2 ring-blue-500;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
-/* Responsive Utilities */
-@media (max-width: 640px) {
-  .container {
-    @apply px-4;
-  }
-}
+/* ── Form ─────────────────────────────────────────────── */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }

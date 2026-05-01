@@ -1,5 +1,7 @@
 import React from "react";
 
+// ── Button ────────────────────────────────────────────────────────────────────
+
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
   size?: "sm" | "md" | "lg";
@@ -13,74 +15,80 @@ export const Button: React.FC<ButtonProps> = ({
   size = "md",
   isLoading = false,
   icon,
-  className = "",
   disabled,
   children,
+  style,
   ...props
 }) => {
-  const baseClasses =
-    "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
-
-  const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-    secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
-    ghost: "text-gray-700 hover:bg-gray-100 focus:ring-gray-500",
+  const base: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    fontWeight: 600,
+    borderRadius: 8,
+    cursor: isLoading || disabled ? "not-allowed" : "pointer",
+    opacity: isLoading || disabled ? 0.5 : 1,
+    border: "none",
+    transition: "all 0.15s ease",
+    fontFamily: "inherit",
+    fontSize: size === "sm" ? 12 : size === "lg" ? 15 : 13,
+    padding: size === "sm" ? "6px 12px" : size === "lg" ? "12px 24px" : "8px 16px",
   };
 
-  const sizes = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-base",
-    lg: "px-6 py-3 text-lg",
+  const variantStyles: Record<string, React.CSSProperties> = {
+    primary:   { background: "linear-gradient(135deg, var(--accent), var(--accent-light))", color: "#fff", boxShadow: "0 4px 16px var(--accent-glow)" },
+    secondary: { background: "var(--surface-2)", color: "var(--text)", border: "1px solid var(--border)" },
+    danger:    { background: "var(--danger-bg)", color: "var(--danger)", border: "1px solid var(--danger)" },
+    ghost:     { background: "transparent", color: "var(--text-muted)" },
   };
 
   return (
-    <button
-      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={isLoading || disabled}
-      {...props}
-    >
-      {isLoading && (
-        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          />
-        </svg>
-      )}
-      {icon && !isLoading && icon}
+    <button style={{ ...base, ...variantStyles[variant], ...style }} disabled={isLoading || disabled} {...props}>
+      {isLoading ? <Spinner /> : icon}
       {children}
     </button>
   );
 };
 
+const Spinner = () => (
+  <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" strokeOpacity="0.25" />
+    <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+  </svg>
+);
+
+// ── Card ──────────────────────────────────────────────────────────────────────
+
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   hover?: boolean;
+  accent?: "blue" | "green" | "orange" | "purple" | "red" | "none";
 }
 
-export const Card: React.FC<CardProps> = ({
-  children,
-  hover = false,
-  className = "",
-  ...props
-}) => {
+export const Card: React.FC<CardProps> = ({ children, hover = false, accent = "none", style, ...props }) => {
+  const accentColor: Record<string, string> = {
+    blue:   "var(--accent)",
+    green:  "var(--success)",
+    orange: "var(--warning)",
+    purple: "var(--accent-light)",
+    red:    "var(--danger)",
+    none:   "transparent",
+  };
+
   return (
     <div
-      className={`
-        bg-white rounded-lg border border-gray-200 shadow-sm
-        ${hover ? "hover:shadow-md transition-shadow cursor-pointer" : ""}
-        ${className}
-      `}
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+        borderLeft: accent !== "none" ? `3px solid ${accentColor[accent]}` : "1px solid var(--border)",
+        transition: hover ? "all 0.15s ease" : undefined,
+        cursor: hover ? "pointer" : undefined,
+        ...style,
+      }}
+      onMouseEnter={hover ? e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 24px var(--accent-glow)"; } : undefined}
+      onMouseLeave={hover ? e => { (e.currentTarget as HTMLElement).style.borderColor = accent !== "none" ? accentColor[accent] : "var(--border)"; (e.currentTarget as HTMLElement).style.boxShadow = "none"; } : undefined}
       {...props}
     >
       {children}
@@ -88,110 +96,90 @@ export const Card: React.FC<CardProps> = ({
   );
 };
 
+// ── Badge ─────────────────────────────────────────────────────────────────────
+
 interface BadgeProps {
   children: React.ReactNode;
   variant?: "default" | "success" | "warning" | "danger" | "info";
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md";
   className?: string;
 }
 
-export const Badge: React.FC<BadgeProps> = ({
-  children,
-  variant = "default",
-  size = "md",
-  className = "",
-}) => {
-  const variants = {
-    default: "bg-gray-100 text-gray-800",
-    success: "bg-green-100 text-green-800",
-    warning: "bg-yellow-100 text-yellow-800",
-    danger: "bg-red-100 text-red-800",
-    info: "bg-blue-100 text-blue-800",
-  };
-
-  const sizes = {
-    sm: "px-2 py-1 text-xs",
-    md: "px-3 py-1.5 text-sm",
-    lg: "px-4 py-2 text-base",
+export const Badge: React.FC<BadgeProps> = ({ children, variant = "default", size = "md", className }) => {
+  const styles: Record<string, React.CSSProperties> = {
+    default: { background: "var(--surface-2)", color: "var(--text-muted)" },
+    success: { background: "var(--success-bg)", color: "var(--success)" },
+    warning: { background: "var(--warning-bg)", color: "var(--warning)" },
+    danger:  { background: "var(--danger-bg)",  color: "var(--danger)" },
+    info:    { background: "var(--accent-glow)", color: "var(--accent-light)" },
   };
 
   return (
     <span
-      className={`
-        inline-flex items-center font-medium rounded-full
-        ${variants[variant]} ${sizes[size]} ${className}
-      `}
+      className={className}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: 999,
+        fontWeight: 600,
+        fontSize: size === "sm" ? 10 : 11,
+        padding: size === "sm" ? "2px 7px" : "3px 9px",
+        ...styles[variant],
+      }}
     >
       {children}
     </span>
   );
 };
 
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
 interface SkeletonProps {
-  width?: string;
-  height?: string;
+  width?: string | number;
+  height?: string | number;
+  borderRadius?: number;
   className?: string;
   count?: number;
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
-  width = "w-full",
-  height = "h-4",
-  className = "",
+  width = "100%",
+  height = 16,
+  borderRadius = 6,
   count = 1,
-}) => {
-  return (
-    <>
-      {Array.from({ length: count }).map((_, i) => (
-        <div
-          key={i}
-          className={`${width} ${height} bg-gray-200 rounded animate-pulse mb-2 ${className}`}
-        />
-      ))}
-    </>
-  );
-};
+}) => (
+  <>
+    {Array.from({ length: count }).map((_, i) => (
+      <div
+        key={i}
+        className="skeleton"
+        style={{ width, height, borderRadius, marginBottom: count > 1 ? 8 : 0 }}
+      />
+    ))}
+  </>
+);
+
+// ── LoadingSpinner ────────────────────────────────────────────────────────────
 
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
   text?: string;
 }
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  size = "md",
-  text = "Loading...",
-}) => {
-  const sizes = {
-    sm: "w-4 h-4",
-    md: "w-8 h-8",
-    lg: "w-12 h-12",
-  };
-
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = "md", text }) => {
+  const sz = { sm: 20, md: 36, lg: 52 }[size];
   return (
-    <div className="flex flex-col items-center justify-center gap-3">
-      <svg
-        className={`${sizes[size]} animate-spin text-blue-600`}
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        />
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+      <svg className="animate-spin" width={sz} height={sz} viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="var(--border)" strokeWidth="3" />
+        <path d="M4 12a8 8 0 018-8" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" />
       </svg>
-      {text && <p className="text-sm text-gray-600">{text}</p>}
+      {text && <p style={{ fontSize: 13, color: "var(--text-muted)" }}>{text}</p>}
     </div>
   );
 };
+
+// ── Alert ─────────────────────────────────────────────────────────────────────
 
 interface AlertProps {
   type?: "success" | "error" | "warning" | "info";
@@ -201,87 +189,82 @@ interface AlertProps {
   className?: string;
 }
 
-export const Alert: React.FC<AlertProps> = ({
-  type = "info",
-  title,
-  message,
-  onClose,
-  className = "",
-}) => {
-  const types = {
-    success: "bg-green-50 border-green-200 text-green-800",
-    error: "bg-red-50 border-red-200 text-red-800",
-    warning: "bg-yellow-50 border-yellow-200 text-yellow-800",
-    info: "bg-blue-50 border-blue-200 text-blue-800",
+export const Alert: React.FC<AlertProps> = ({ type = "info", title, message, onClose }) => {
+  const styles: Record<string, { bg: string; color: string; icon: string }> = {
+    success: { bg: "var(--success-bg)", color: "var(--success)", icon: "✓" },
+    error:   { bg: "var(--danger-bg)",  color: "var(--danger)",  icon: "✕" },
+    warning: { bg: "var(--warning-bg)", color: "var(--warning)", icon: "⚠" },
+    info:    { bg: "var(--accent-glow)",color: "var(--accent-light)", icon: "ℹ" },
   };
-
-  const icons = {
-    success: "✓",
-    error: "✕",
-    warning: "⚠",
-    info: "ℹ",
-  };
+  const s = styles[type];
 
   return (
     <div
-      className={`
-        border rounded-lg p-4 flex items-start gap-4
-        ${types[type]} ${className}
-      `}
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 12,
+        padding: "12px 16px",
+        borderRadius: 10,
+        background: s.bg,
+        border: `1px solid ${s.color}22`,
+        color: s.color,
+      }}
     >
-      <div className="text-xl flex-shrink-0">{icons[type]}</div>
-      <div className="flex-1">
-        {title && <h3 className="font-semibold mb-1">{title}</h3>}
-        <p className="text-sm">{message}</p>
+      <span style={{ fontWeight: 700, flexShrink: 0 }}>{s.icon}</span>
+      <div style={{ flex: 1 }}>
+        {title && <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{title}</p>}
+        <p style={{ fontSize: 13 }}>{message}</p>
       </div>
       {onClose && (
-        <button
-          onClick={onClose}
-          className="flex-shrink-0 text-xl hover:opacity-70"
-        >
-          ✕
-        </button>
+        <button onClick={onClose} style={{ background: "none", border: "none", color: "currentColor", cursor: "pointer", opacity: 0.6, flexShrink: 0 }}>✕</button>
       )}
     </div>
   );
 };
 
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
 interface TabsProps {
   tabs: { label: string; value: string; icon?: React.ReactNode }[];
   activeTab: string;
   onTabChange: (value: string) => void;
+  children: React.ReactNode;
   className?: string;
 }
 
-export const Tabs: React.FC<
-  TabsProps & { children: React.ReactNode }
-> = ({ tabs, activeTab, onTabChange, className = "", children }) => {
-  return (
-    <div className={className}>
-      <div className="flex gap-2 border-b border-gray-200 mb-4">
-        {tabs.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => onTabChange(tab.value)}
-            className={`
-              px-4 py-2 font-medium text-sm flex items-center gap-2 transition-colors
-              border-b-2 -mb-px
-              ${
-                activeTab === tab.value
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }
-            `}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      {children}
+export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange, children }) => (
+  <div>
+    <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--border)", marginBottom: 16 }}>
+      {tabs.map(tab => (
+        <button
+          key={tab.value}
+          onClick={() => onTabChange(tab.value)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "8px 14px",
+            fontSize: 13,
+            fontWeight: 500,
+            background: "none",
+            border: "none",
+            borderBottom: activeTab === tab.value ? "2px solid var(--accent)" : "2px solid transparent",
+            color: activeTab === tab.value ? "var(--accent-light)" : "var(--text-muted)",
+            cursor: "pointer",
+            marginBottom: -1,
+            transition: "all 0.15s",
+          }}
+        >
+          {tab.icon}{tab.label}
+        </button>
+      ))}
     </div>
-  );
-};
+    {children}
+  </div>
+);
+
+// ── Input ─────────────────────────────────────────────────────────────────────
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -290,94 +273,68 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ReactNode;
 }
 
-export const Input: React.FC<InputProps> = ({
-  label,
-  error,
-  helperText,
-  icon,
-  className = "",
-  ...props
-}) => {
-  return (
-    <div className="w-full">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label}
-        </label>
-      )}
-      <div className="relative">
-        {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            {icon}
-          </div>
-        )}
-        <input
-          className={`
-            w-full px-4 py-2 rounded-lg border
-            ${icon ? "pl-10" : ""}
-            ${
-              error
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 focus:ring-blue-500"
-            }
-            focus:outline-none focus:ring-2 focus:ring-offset-0
-            disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed
-            ${className}
-          `}
-          {...props}
-        />
-      </div>
-      {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
-      {helperText && !error && (
-        <p className="text-sm text-gray-500 mt-1">{helperText}</p>
-      )}
+export const Input: React.FC<InputProps> = ({ label, error, helperText, icon, style, ...props }) => (
+  <div style={{ width: "100%" }}>
+    {label && <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--text-muted)", marginBottom: 6 }}>{label}</label>}
+    <div style={{ position: "relative" }}>
+      {icon && <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-dim)" }}>{icon}</div>}
+      <input
+        style={{
+          width: "100%",
+          padding: icon ? "9px 12px 9px 36px" : "9px 12px",
+          background: "var(--surface-2)",
+          border: `1px solid ${error ? "var(--danger)" : "var(--border)"}`,
+          borderRadius: 8,
+          color: "var(--text)",
+          fontSize: 13,
+          outline: "none",
+          fontFamily: "inherit",
+          transition: "border-color 0.15s",
+          ...style,
+        }}
+        onFocus={e => (e.currentTarget.style.borderColor = "var(--accent)")}
+        onBlur={e => (e.currentTarget.style.borderColor = error ? "var(--danger)" : "var(--border)")}
+        {...props}
+      />
     </div>
-  );
-};
+    {error && <p style={{ fontSize: 11, color: "var(--danger)", marginTop: 4 }}>{error}</p>}
+    {helperText && !error && <p style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 4 }}>{helperText}</p>}
+  </div>
+);
 
-interface SelectProps
-  extends React.SelectHTMLAttributes<HTMLSelectElement> {
+// ── Select ────────────────────────────────────────────────────────────────────
+
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   options: { value: string; label: string }[];
   error?: string;
 }
 
-export const Select: React.FC<SelectProps> = ({
-  label,
-  options,
-  error,
-  className = "",
-  ...props
-}) => {
-  return (
-    <div className="w-full">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label}
-        </label>
-      )}
-      <select
-        className={`
-          w-full px-4 py-2 rounded-lg border
-          ${
-            error
-              ? "border-red-500 focus:ring-red-500"
-              : "border-gray-300 focus:ring-blue-500"
-          }
-          focus:outline-none focus:ring-2
-          disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed
-          ${className}
-        `}
-        {...props}
-      >
-        <option value="">Select an option</option>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
-    </div>
-  );
-};
+export const Select: React.FC<SelectProps> = ({ label, options, error, style, ...props }) => (
+  <div style={{ width: "100%" }}>
+    {label && <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--text-muted)", marginBottom: 6 }}>{label}</label>}
+    <select
+      style={{
+        width: "100%",
+        padding: "9px 12px",
+        background: "var(--surface-2)",
+        border: `1px solid ${error ? "var(--danger)" : "var(--border)"}`,
+        borderRadius: 8,
+        color: "var(--text)",
+        fontSize: 13,
+        outline: "none",
+        fontFamily: "inherit",
+        cursor: "pointer",
+        ...style,
+      }}
+      {...props}
+    >
+      {options.map(opt => (
+        <option key={opt.value} value={opt.value} style={{ background: "var(--surface)" }}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+    {error && <p style={{ fontSize: 11, color: "var(--danger)", marginTop: 4 }}>{error}</p>}
+  </div>
+);

@@ -1,30 +1,54 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Header, Container } from "../components/layout/Layout";
 import { useData } from "../contexts/DataContext";
 import { AdminStatusData, PendingRequest } from "../types";
 import { getAdminStatus, approveAccess } from "../services/api";
 
 const STAFF_DOMAIN = "@deaistrategies.io";
 
-const StatCard: React.FC<{ label: string; value: number; color: string }> = ({
-  label,
-  value,
-  color,
-}) => (
-  <div className="bg-white rounded-lg border p-5">
-    <p className="text-sm text-gray-500 mb-1">{label}</p>
-    <p className={`text-3xl font-bold ${color}`}>{value}</p>
+// ── Admin Stat Card ───────────────────────────────────────────────────────────
+
+const AdminStatCard: React.FC<{
+  label: string;
+  value: number;
+  accent: string;
+  icon: string;
+}> = ({ label, value, accent, icon }) => (
+  <div
+    style={{
+      background: "var(--surface)",
+      border: "1px solid var(--border)",
+      borderLeft: `3px solid ${accent}`,
+      borderRadius: 12,
+      padding: 20,
+    }}
+  >
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+      <p style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", margin: 0, textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</p>
+      <div style={{ width: 30, height: 30, borderRadius: 8, background: `${accent}1a`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>{icon}</div>
+    </div>
+    <p style={{ fontSize: 32, fontWeight: 700, color: "var(--text)", margin: 0, lineHeight: 1, letterSpacing: "-0.03em" }}>{value}</p>
   </div>
 );
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
+const StatSkeleton = () => (
+  <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 20 }}>
+    <div className="skeleton" style={{ width: 60, height: 11, borderRadius: 4, marginBottom: 14 }} />
+    <div className="skeleton" style={{ width: 40, height: 32, borderRadius: 6 }} />
+  </div>
+);
+
+// ── Admin Page ────────────────────────────────────────────────────────────────
 
 const AdminPage: React.FC = () => {
   const { state } = useData();
   const { user, token } = state;
 
-  const [adminData, setAdminData] = useState<AdminStatusData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [approving, setApproving] = useState<string | null>(null); // email being approved
+  const [adminData, setAdminData]   = useState<AdminStatusData | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState<string | null>(null);
+  const [approving, setApproving]   = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const isStaff = !!user?.email?.toLowerCase().endsWith(STAFF_DOMAIN);
@@ -53,8 +77,8 @@ const AdminPage: React.FC = () => {
     setSuccessMsg(null);
     try {
       await approveAccess(email, token);
-      setSuccessMsg(`Approved ${email}`);
-      await fetchStatus();
+      setSuccessMsg(`Access approved for ${email}`);
+      fetchStatus();
     } catch (e: any) {
       setError(e.message || "Approval failed");
     } finally {
@@ -62,135 +86,169 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  // ── Guards ────────────────────────────────────────────────────────────────
+
   if (!user) {
     return (
-      <>
-        <Header title="Admin" subtitle="Access management" />
-        <Container>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-            <p className="text-yellow-800 font-medium">Sign in to access the admin panel.</p>
-          </div>
-        </Container>
-      </>
+      <GuardMessage
+        icon="🔐"
+        title="Sign in required"
+        message="Please sign in to access the admin panel."
+        color="var(--warning)"
+      />
     );
   }
 
   if (!isStaff) {
     return (
-      <>
-        <Header title="Admin" subtitle="Access management" />
-        <Container>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <p className="text-red-800 font-medium">Access denied.</p>
-            <p className="text-red-600 text-sm mt-1">
-              This page requires a <strong>{STAFF_DOMAIN}</strong> account.
-            </p>
-          </div>
-        </Container>
-      </>
+      <GuardMessage
+        icon="🚫"
+        title="Access denied"
+        message={`This panel requires a ${STAFF_DOMAIN} account.`}
+        color="var(--danger)"
+      />
     );
   }
 
+  // ── Main ──────────────────────────────────────────────────────────────────
+
   return (
-    <>
-      <Header title="Admin" subtitle="Access management" />
-      <Container>
-        <div className="space-y-6">
+    <div style={{ padding: "20px 24px 40px", display: "flex", flexDirection: "column", gap: 20 }}>
 
-          {/* Error / success banners */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
-              <p className="text-red-700 text-sm">{error}</p>
-              <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 ml-4">✕</button>
-            </div>
-          )}
-          {successMsg && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
-              <p className="text-green-700 text-sm">{successMsg}</p>
-              <button onClick={() => setSuccessMsg(null)} className="text-green-400 hover:text-green-600 ml-4">✕</button>
-            </div>
-          )}
+      {/* Section title */}
+      <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-muted)", margin: 0, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+        Access Management
+      </h2>
 
-          {/* Stats */}
-          {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg border p-5 animate-pulse">
-                  <div className="h-3 bg-gray-200 rounded w-16 mb-3" />
-                  <div className="h-8 bg-gray-200 rounded w-10" />
-                </div>
-              ))}
-            </div>
-          ) : adminData ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard label="Pending" value={adminData.counts.pending} color="text-yellow-600" />
-              <StatCard label="Approved" value={adminData.counts.approved} color="text-green-600" />
-              <StatCard label="Revoked" value={adminData.counts.revoked} color="text-red-600" />
-              <StatCard label="Expired" value={adminData.counts.expired} color="text-gray-500" />
-            </div>
-          ) : null}
+      {/* Banners */}
+      {error && (
+        <Banner color="var(--danger)" bg="var(--danger-bg)" onClose={() => setError(null)}>
+          {error}
+        </Banner>
+      )}
+      {successMsg && (
+        <Banner color="var(--success)" bg="var(--success-bg)" onClose={() => setSuccessMsg(null)}>
+          {successMsg}
+        </Banner>
+      )}
 
-          {/* Pending requests table */}
-          <div className="bg-white rounded-lg border overflow-hidden">
-            <div className="px-6 py-4 border-b flex items-center justify-between">
-              <h2 className="font-semibold text-gray-800">Pending Access Requests</h2>
-              <button
-                onClick={fetchStatus}
-                disabled={loading}
-                className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
-              >
-                Refresh
-              </button>
-            </div>
-
-            {loading ? (
-              <div className="p-8 text-center text-gray-400 text-sm">Loading...</div>
-            ) : !adminData || adminData.pending_requests.length === 0 ? (
-              <div className="p-8 text-center text-gray-400 text-sm">No pending requests</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="text-left px-6 py-3 text-gray-600 font-medium">Email</th>
-                      <th className="text-left px-6 py-3 text-gray-600 font-medium">Requested</th>
-                      <th className="text-left px-6 py-3 text-gray-600 font-medium">Expires</th>
-                      <th className="text-left px-6 py-3 text-gray-600 font-medium">Requests</th>
-                      <th className="px-6 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {adminData.pending_requests.map((req: PendingRequest) => (
-                      <tr key={req.email} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-800">{req.email}</td>
-                        <td className="px-6 py-4 text-gray-500">
-                          {new Date(req.created_at).toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 text-gray-500">
-                          {new Date(req.expires_at).toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 text-gray-500">{req.request_count}</td>
-                        <td className="px-6 py-4 text-right">
-                          <button
-                            onClick={() => handleApprove(req.email)}
-                            disabled={approving === req.email}
-                            className="bg-blue-600 text-white px-4 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {approving === req.email ? "Approving…" : "Approve"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
+      {/* Stat cards */}
+      {loading ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+          {[...Array(4)].map((_, i) => <StatSkeleton key={i} />)}
         </div>
-      </Container>
-    </>
+      ) : adminData ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+          <AdminStatCard label="Pending"  value={adminData.counts.pending}  accent="var(--warning)" icon="⏳" />
+          <AdminStatCard label="Approved" value={adminData.counts.approved} accent="var(--success)" icon="✓" />
+          <AdminStatCard label="Revoked"  value={adminData.counts.revoked}  accent="var(--danger)"  icon="✕" />
+          <AdminStatCard label="Expired"  value={adminData.counts.expired}  accent="var(--text-dim)" icon="⌛" />
+        </div>
+      ) : null}
+
+      {/* Pending requests table */}
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
+        {/* Table header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid var(--border)" }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: 0 }}>Pending Requests</h3>
+          <button
+            onClick={fetchStatus}
+            disabled={loading}
+            style={{ fontSize: 12, color: "var(--accent-light)", background: "none", border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontWeight: 600 }}
+          >
+            ↻ Refresh
+          </button>
+        </div>
+
+        {loading ? (
+          <div style={{ padding: 40, display: "flex", justifyContent: "center" }}>
+            <LoadingIndicator />
+          </div>
+        ) : !adminData || adminData.pending_requests.length === 0 ? (
+          <div style={{ padding: "48px 24px", textAlign: "center" }}>
+            <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.3 }}>✓</div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-muted)", margin: "0 0 4px" }}>No pending requests</p>
+            <p style={{ fontSize: 12, color: "var(--text-dim)", margin: 0 }}>All access requests have been processed.</p>
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                  {["Email", "Requested", "Expires", "Requests", ""].map((h, i) => (
+                    <th key={i} style={{ padding: "10px 16px", fontSize: 11, fontWeight: 600, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.06em", background: "var(--surface-2)", textAlign: i === 4 ? "right" : "left", whiteSpace: "nowrap" }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {adminData.pending_requests.map((req: PendingRequest) => (
+                  <tr
+                    key={req.email}
+                    style={{ borderBottom: "1px solid var(--border-subtle)", transition: "background 0.12s" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-2)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <td style={{ padding: "13px 16px", fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{req.email}</td>
+                    <td style={{ padding: "13px 16px", fontSize: 12, color: "var(--text-muted)" }}>{new Date(req.created_at).toLocaleString()}</td>
+                    <td style={{ padding: "13px 16px", fontSize: 12, color: "var(--text-muted)" }}>{new Date(req.expires_at).toLocaleString()}</td>
+                    <td style={{ padding: "13px 16px", fontSize: 12, color: "var(--text-muted)" }}>{req.request_count}</td>
+                    <td style={{ padding: "13px 16px", textAlign: "right" }}>
+                      <button
+                        onClick={() => handleApprove(req.email)}
+                        disabled={approving === req.email}
+                        style={{
+                          padding: "6px 16px",
+                          borderRadius: 8,
+                          border: "none",
+                          background: approving === req.email ? "var(--surface-3)" : "linear-gradient(135deg, var(--accent), var(--accent-light))",
+                          color: approving === req.email ? "var(--text-dim)" : "#fff",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: approving === req.email ? "not-allowed" : "pointer",
+                          boxShadow: approving === req.email ? "none" : "0 2px 12px var(--accent-glow)",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {approving === req.email ? "Approving…" : "Approve"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const GuardMessage: React.FC<{ icon: string; title: string; message: string; color: string }> = ({ icon, title, message, color }) => (
+  <div style={{ padding: "80px 24px", display: "flex", justifyContent: "center" }}>
+    <div style={{ background: "var(--surface)", border: `1px solid ${color}44`, borderRadius: 14, padding: "40px 48px", textAlign: "center", maxWidth: 400 }}>
+      <div style={{ fontSize: 36, marginBottom: 16 }}>{icon}</div>
+      <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>{title}</h2>
+      <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>{message}</p>
+    </div>
+  </div>
+);
+
+const Banner: React.FC<{ children: React.ReactNode; color: string; bg: string; onClose: () => void }> = ({ children, color, bg, onClose }) => (
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", borderRadius: 10, background: bg, border: `1px solid ${color}33`, color }}>
+    <span style={{ fontSize: 13, fontWeight: 500 }}>{children}</span>
+    <button onClick={onClose} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.7, fontSize: 15 }}>✕</button>
+  </div>
+);
+
+const LoadingIndicator = () => (
+  <svg className="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="10" stroke="var(--border)" strokeWidth="3" />
+    <path d="M4 12a8 8 0 018-8" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
 
 export default AdminPage;
