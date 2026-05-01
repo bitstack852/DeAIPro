@@ -358,6 +358,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Firebase Auth listener
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // User is signed in
