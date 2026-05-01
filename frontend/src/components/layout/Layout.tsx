@@ -48,20 +48,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         flexShrink: 0,
       }}
     >
-      {/* Logo */}
+      {/* Logo + toggle */}
       <div
         style={{
           height: 56,
           display: "flex",
           alignItems: "center",
-          padding: "0 16px",
+          padding: "0 12px",
           borderBottom: "1px solid var(--border)",
-          gap: 10,
+          gap: 8,
           flexShrink: 0,
+          justifyContent: expanded ? "space-between" : "center",
         }}
       >
-        <div style={{ flexShrink: 0 }}>
-          <svg width="28" height="28" viewBox="0 0 18 18" fill="none">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <svg width="28" height="28" viewBox="0 0 18 18" fill="none" style={{ flexShrink: 0 }}>
             <polygon
               points="9,1.5 16.5,5.5 16.5,12.5 9,16.5 1.5,12.5 1.5,5.5"
               stroke="var(--accent-light)"
@@ -70,20 +71,52 @@ export const Sidebar: React.FC<SidebarProps> = ({
             />
             <circle cx="9" cy="9" r="2.4" fill="var(--accent)" />
           </svg>
+          {expanded && (
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: "var(--text)",
+                whiteSpace: "nowrap",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              DeAIPro
+            </span>
+          )}
         </div>
-        {expanded && (
-          <span
-            style={{
-              fontSize: 15,
-              fontWeight: 700,
-              color: "var(--text)",
-              whiteSpace: "nowrap",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            DeAIPro
-          </span>
-        )}
+
+        {/* Hamburger toggle — always visible */}
+        <button
+          onClick={onToggle}
+          title={expanded ? "Collapse sidebar" : "Expand sidebar"}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            border: "1px solid var(--border)",
+            background: "var(--surface-2)",
+            color: "var(--text-muted)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            flexShrink: 0,
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--text)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
+        >
+          {expanded ? (
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 4h10M2 7h10M2 10h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 4h10M2 7h10M2 10h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          )}
+        </button>
       </div>
 
       {/* Nav items */}
@@ -142,40 +175,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
-      {/* Toggle */}
-      <button
-        onClick={onToggle}
-        title={expanded ? "Collapse sidebar" : "Expand sidebar"}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: expanded ? "flex-start" : "center",
-          gap: 8,
-          padding: expanded ? "12px 16px" : "12px 0",
-          width: "100%",
-          background: "none",
-          border: "none",
-          borderTop: "1px solid var(--border)",
-          color: "var(--text-dim)",
-          cursor: "pointer",
-          fontSize: 12,
-          flexShrink: 0,
-          transition: "color 0.15s ease",
-        }}
-        onMouseEnter={e => (e.currentTarget.style.color = "var(--text-muted)")}
-        onMouseLeave={e => (e.currentTarget.style.color = "var(--text-dim)")}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.25s ease", flexShrink: 0 }}
-        >
-          <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        {expanded && <span>Collapse</span>}
-      </button>
     </aside>
   );
 };

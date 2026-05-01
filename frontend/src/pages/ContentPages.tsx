@@ -45,14 +45,15 @@ export const NewsPage: React.FC = () => {
   const [category, setCategory] = useState("");
   const [search, setSearch]     = useState("");
 
-  const categories = Array.from(new Set(state.news.map(n => n.tg))).sort();
+  const safeNews = Array.isArray(state.news) ? state.news : [];
+  const categories = Array.from(new Set(safeNews.map(n => n.tg))).sort();
 
-  const filtered = state.news.filter(n =>
+  const filtered = safeNews.filter(n =>
     (!category || n.tg === category) &&
     (!search || n.t.toLowerCase().includes(search.toLowerCase()) || n.s.toLowerCase().includes(search.toLowerCase()))
   );
 
-  if (state.isLoading && state.news.length === 0) {
+  if (state.isLoading && safeNews.length === 0) {
     return <div style={{ ...PAGE, display: "flex", justifyContent: "center", paddingTop: 80 }}><LoadingSpinner text="Loading news…" /></div>;
   }
 
@@ -108,8 +109,9 @@ export const ResearchPage: React.FC = () => {
   const { state } = useData();
   const [category, setCategory] = useState("");
 
-  const categories = Array.from(new Set(state.research.map(r => r.c))).sort();
-  const filtered   = state.research.filter(r => !category || r.c === category);
+  const safeResearch = Array.isArray(state.research) ? state.research : [];
+  const categories = Array.from(new Set(safeResearch.map(r => r.c))).sort();
+  const filtered   = safeResearch.filter(r => !category || r.c === category);
 
   return (
     <div style={PAGE}>
@@ -160,7 +162,8 @@ export const LessonsPage: React.FC = () => {
   const { state } = useData();
   const [level, setLevel] = useState("");
 
-  const filtered = state.lessons.filter(l => !level || l.level === level);
+  const safeLessons = Array.isArray(state.lessons) ? state.lessons : [];
+  const filtered = safeLessons.filter(l => !level || l.level === level);
 
   return (
     <div style={PAGE}>
