@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+
+const APP_VERSION = "2026-05-01.6";
+console.log(`[DeAIPro] version ${APP_VERSION} loaded`);
 import { DataProvider, useData } from "./contexts/DataContext";
 import { DashboardPage } from "./pages/DashboardPage";
 import { NewsPage, ResearchPage, LessonsPage } from "./pages/ContentPages";

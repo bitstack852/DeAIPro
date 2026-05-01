@@ -94,7 +94,8 @@ export const getSubnets = async (
       ...getAuthHeader(token),
     },
   });
-  return handleResponse(response);
+  const json = await handleResponse(response);
+  return Array.isArray(json) ? json : (json?.data ?? []);
 };
 
 /**
