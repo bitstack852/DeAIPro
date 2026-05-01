@@ -130,11 +130,12 @@ All 5 background services (`health`, `price`, `metagraph`, `github`, `news`) wer
 - [x] Pending list sorted newest first with email, created_at, expires_at, request_count
 - [x] Gated behind `require_staff`
 
-### 4.4 Admin Dashboard — Frontend
-- [ ] Add `/admin` route to Next.js `app/` directory, behind Firebase auth guard
-- [ ] Create `AccessRequestsTable` component — lists pending requests with Approve/Deny buttons
-- [ ] Create `AdminStatsPanel` — shows access request counts
-- [ ] Wire to `/api/admin/status` and `/api/admin/approve-access`
+### 4.4 Admin Dashboard — Frontend ✅ DONE
+- [x] `frontend/src/pages/AdminPage.tsx` — stats panel (pending/approved/revoked/expired counts), pending requests table with Approve button, skeleton loaders, error/success banners
+- [x] Staff-domain guard — shows Access Denied for non-`@deaistrategies.io` accounts
+- [x] Admin sidebar item only visible to staff users
+- [x] `api.ts` — fixed `API_BASE_URL` to use `import.meta.env.VITE_API_URL` (was using wrong CRA env var), updated `getAdminStatus` and `approveAccess` to match backend response shapes
+- [x] `types/index.ts` — added `AdminStatusData` and `PendingRequest` interfaces
 
 ### 4.5 Email Notifications
 - [ ] Integrate an email provider (SendGrid or Resend) into backend
@@ -338,4 +339,4 @@ NEXT_PUBLIC_SENTRY_DSN=
 
 ---
 
-*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete, Phase 2 admin endpoints (4.1–4.3) done. Overall: 86%.*
+*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete, Phase 2 tasks 4.1–4.4 done. Overall: 87%.*
