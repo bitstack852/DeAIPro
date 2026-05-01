@@ -17,9 +17,10 @@
 6. [Phase 4 — Premium Features & Monetization](#6-phase-4--premium-features--monetization)
 7. [Phase 5 — Scale & Polish](#7-phase-5--scale--polish)
 8. [Phase 6 — Authenticated App Redesign](#8-phase-6--authenticated-app-redesign)
-9. [Tech Debt Backlog](#9-tech-debt-backlog)
-10. [Infrastructure & DevOps](#10-infrastructure--devops)
-11. [Completion Tracker](#11-completion-tracker)
+9. [Phase 7 — Admin Settings Panel & Live Config](#9-phase-7--admin-settings-panel--live-config)
+10. [Tech Debt Backlog](#10-tech-debt-backlog)
+11. [Infrastructure & DevOps](#11-infrastructure--devops)
+12. [Completion Tracker](#12-completion-tracker)
 
 ---
 
@@ -316,7 +317,69 @@ All 5 background services (`health`, `price`, `metagraph`, `github`, `news`) wer
 
 ---
 
-## 9. Tech Debt Backlog
+## 9. Phase 7 — Admin Settings Panel & Live Config
+
+**Goal:** Move every runtime-configurable value out of `.env` and into a MongoDB-backed settings store, manageable through the admin panel UI. Staff can update API keys, sync intervals, and feature flags without touching files or restarting the app. Each credential section includes a **Test Connection** button to validate before saving.
+
+**Estimate:** 1–2 weeks
+
+### What Stays in `.env` (Bootstrap Secrets — Cannot Move)
+These are required before the app can connect to anything, so they must remain as environment variables:
+- `MONGODB_URL` — needed to connect to the DB where all other settings live
+- `FIREBASE_PROJECT_ID` / `GOOGLE_APPLICATION_CREDENTIALS` — needed to authenticate users before the panel is reachable
+- `SENTRY_DSN` — infrastructure-level error tracking, set at deploy time
+- `VITE_FIREBASE_*` — frontend vars baked into the bundle at build time
+
+### What Moves to the Settings Panel
+| Group | Settings |
+|-------|----------|
+| Data Sources | TaoStats API key, CoinGecko API key, GitHub personal access token |
+| Sync Intervals | Metagraph (min), Price (min), News (min), GitHub (min) |
+| Notifications | SendGrid API key, sender email address, notification recipient list |
+| App Behaviour | CORS allowed origins, rate limit (requests/minute per IP) |
+| Feature Flags | Enable/disable each background service independently |
+
+---
+
+### 7.1 Backend — AppConfig Model & Repository
+- [ ] Create `AppConfig` MongoDB model — fields: `key` (unique), `value`, `category`, `label`, `is_secret` (bool), `updated_at`, `updated_by`
+- [ ] On startup: seed `AppConfig` from env vars for any key not already present in DB — env vars act as defaults, DB values take precedence at runtime
+- [ ] Create `config_service.py` — `get(key)`, `set(key, value)`, `get_all_by_category()` functions used by background services instead of reading `os.environ` directly
+- [ ] Update all 5 background services (`metagraph`, `price`, `news`, `github`, `health`) to read their API keys and intervals from `config_service` at each run cycle — changes propagate on next tick without restart
+
+### 7.2 Backend — Config API Endpoints
+- [ ] `GET /api/admin/config` — returns all config grouped by category; secret values masked as `"••••••••"` in response
+- [ ] `PUT /api/admin/config` — accepts `{ key: string, value: string }`, validates key is in allowed list, writes to DB, returns updated record; all endpoints gated behind `require_staff`
+- [ ] `POST /api/admin/config/test/taostats` — makes a lightweight test call to TaoStats API using the stored key, returns `{ ok: bool, latency_ms: int, detail: string }`
+- [ ] `POST /api/admin/config/test/coingecko` — tests CoinGecko key with a `/ping` call
+- [ ] `POST /api/admin/config/test/github` — tests GitHub token with a `/rate_limit` call, returns remaining quota
+- [ ] `POST /api/admin/config/test/sendgrid` — validates SendGrid key with their key validation endpoint
+
+### 7.3 Frontend — Settings Page
+- [ ] Build `/settings` page (currently a stub) — visible to staff only, redirect others to dashboard
+- [ ] Layout: left nav with category tabs (Data Sources, Sync Intervals, Notifications, App Behaviour, Feature Flags)
+- [ ] Fetch all config on load via `GET /api/admin/config`; show skeleton while loading
+- [ ] Each secret field renders as masked (`••••••••`) with a show/hide toggle (eye icon)
+- [ ] Each field has an inline **Save** button — fires `PUT /api/admin/config` on click, shows spinner then success/error feedback inline
+- [ ] Unsaved changes tracked per field — dirty fields highlighted with accent border, **Save** button enabled only when value differs from loaded value
+
+### 7.4 Frontend — Test Connection Buttons
+- [ ] Each Data Source row has a **Test** button beside the API key field
+- [ ] On click: fires `POST /api/admin/config/test/{service}`, shows spinner
+- [ ] On success: green badge — `✓ Connected  (42 ms)`
+- [ ] On failure: red badge — `✕ Failed — Invalid API key` (detail from backend)
+- [ ] Test result clears after 30 seconds or when the field value changes
+- [ ] Sync Interval fields show the next scheduled run time based on current interval value
+
+### 7.5 Frontend — Feature Flags
+- [ ] Toggle switches (not checkboxes) for each background service: Metagraph Sync, Price Sync, News Sync, GitHub Sync
+- [ ] Toggle fires `PUT /api/admin/config` immediately on change (no separate Save for booleans)
+- [ ] Disabled services show a paused badge in the admin status panel
+- [ ] Backend: background services check their enabled flag at the start of each run cycle and skip gracefully if disabled
+
+---
+
+## 10. Tech Debt Backlog
 
 These are lower-priority cleanup items to address between phases.
 
@@ -335,7 +398,7 @@ These are lower-priority cleanup items to address between phases.
 
 ---
 
-## 9. Infrastructure & DevOps
+## 11. Infrastructure & DevOps
 
 ### Environment Variables Reference
 
@@ -378,7 +441,7 @@ NEXT_PUBLIC_SENTRY_DSN=
 
 ---
 
-## 10. Completion Tracker
+## 12. Completion Tracker
 
 | Area | Current | After Phase 1 | After Phase 2 | After Phase 3 | Final |
 |------|---------|---------------|---------------|---------------|-------|
@@ -395,4 +458,4 @@ NEXT_PUBLIC_SENTRY_DSN=
 
 ---
 
-*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete, Phase 2 tasks 4.1–4.4 done, Phase 6 (Redesign) complete (8.1–8.4 and 8.6 fully shipped; 8.5 Portfolio + Settings deferred pending backend). Overall: ~90%.*
+*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete, Phase 2 tasks 4.1–4.4 done, Phase 6 (Redesign) complete, Phase 7 (Admin Settings Panel) planned. Overall: ~90%.*
