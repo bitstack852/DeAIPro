@@ -55,16 +55,16 @@ These must be fixed before any production deployment.
 Deleted duplicate `get_research` and `get_lessons` stub functions from `backend/api/routes/public.py`. Both endpoints now return paginated real MongoDB data.
 
 ### ~~BUG-002 — Hardcoded Price Data in `/api/stats`~~ ✅ FIXED 2026-05-01
-`get_stats()` now queries the latest `PriceHistory` document for `tao_price`, `market_cap`, and `volume_24h`. Falls back to `0.0` until PriceService completes its first sync.
+`get_stats()` now queries the latest `PriceHistory` document for `tao_price`, `market_cap`, and `volume_24h`. Falls back to `0.0` until PriceService completes its first sync. Also fixed symbol mismatch: query now uses `"TAO/USD"` to match what `PriceService` writes.
 
-### BUG-003 — `.env.example` Missing
-**Problem:** No `.env.example` or `.env.local.example` in the repository. Any new developer or deployment environment has no reference for required variables.  
-**Fix:** Create `backend/.env.example` listing all variables from `backend/config/settings.py` with placeholder values and comments.
+### ~~BUG-003 — `.env.example` Missing~~ ✅ FIXED 2026-05-01
+Root `.env.example` created with all required variables, Docker defaults, and inline comments for every setting.
 
-### BUG-004 — `render.yaml` Incomplete
-**File:** `render.yaml`  
-**Problem:** No environment variables are declared. Deployments to Render will fail silently on missing config.  
-**Fix:** Add `envVars` blocks for all required settings (Firebase, TaoStats, MongoDB, Sentry, CORS).
+### ~~BUG-004 — `render.yaml` Incomplete~~ ✅ FIXED 2026-05-01
+All backend and frontend env vars added with `sync: false` for secrets. Python bumped to 3.12, `startCommand` and `rootDir` corrected per service.
+
+### ~~BUG-005 — Structlog `multiple values for argument 'event'` in Background Services~~ ✅ FIXED 2026-05-01
+All 5 background services (`health`, `price`, `metagraph`, `github`, `news`) were passing `event=` as a keyword arg to `log_sync()`, which internally calls structlog with the first positional string already serving as `event`. Removed the redundant `event=` kwarg from every call site. Health monitor, price sync, and all other schedulers now log cleanly without error.
 
 ---
 
@@ -336,4 +336,4 @@ NEXT_PUBLIC_SENTRY_DSN=
 
 ---
 
-*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete. Overall: 84%.*
+*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete + BUG-005 structlog fix. Overall: 84%.*
