@@ -87,20 +87,21 @@ Deleted duplicate `get_research` and `get_lessons` stub functions from `backend/
 - [ ] Create `frontend/.env.example` with all frontend environment variables
 - [ ] Add setup instructions to `README.md` referencing the example files
 
-### 3.4 Complete `render.yaml` (BUG-004)
-- [ ] Add all backend environment variables with `sync: false` for secrets
-- [ ] Add MongoDB Atlas connection string variable
-- [ ] Add frontend environment variables pointing to backend service URL
-- [ ] Add Redis service if caching layer is needed for rate limiting
+### 3.4 Complete `render.yaml` (BUG-004) ✅ DONE
+- [x] Add all backend environment variables with `sync: false` for secrets
+- [x] Add MongoDB Atlas connection string variable
+- [x] Add all frontend `VITE_` environment variables pointing to backend service URL
+- [x] Correct `startCommand` paths, bump to Python 3.12
 
 ### 3.5 Integrate Sentiment Scores into Subnet Responses ✅ DONE
 - [x] Import and call `FearGreedEngine` inside `get_subnet_detail()` in `public.py`
 - [x] Add `ecosystem_sentiment` block to subnet detail response (score, label, components, computed_at)
 - [x] News fetch and sentiment compute run concurrently via `asyncio.gather`
 
-### 3.6 Fix Default Docker Credentials
-- [ ] Replace hardcoded `password` in `docker-compose.yml` MongoDB service with an env variable
-- [ ] Add `MONGO_PASSWORD` to `.env.example`
+### 3.6 Fix Default Docker Credentials ✅ DONE
+- [x] `MONGODB_PASSWORD` now required via `:?` — Docker Compose fails loudly if unset
+- [x] Removed `:-password` fallback from all references in `docker-compose.yml`
+- [x] Fixed frontend env prefix from `NEXT_PUBLIC_` to `VITE_` in compose and `.env.example`
 
 ---
 
@@ -331,8 +332,8 @@ NEXT_PUBLIC_SENTRY_DSN=
 | Config / Env | 60% | 90% | 90% | 90% | 100% |
 | Deployment | 80% | 90% | 90% | 90% | 100% |
 | Documentation | 50% | 65% | 70% | 80% | 95% |
-| **Overall** | **82%** | **86%** | **91%** | **96%** | **99%** |
+| **Overall** | **84%** | **86%** | **91%** | **96%** | **99%** |
 
 ---
 
-*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — BUG-001, BUG-002 resolved, sentiment wired. Overall: 82%.*
+*This plan was generated from a full codebase audit on 2026-05-01. Last updated: 2026-05-01 — Phase 1 complete. Overall: 84%.*
