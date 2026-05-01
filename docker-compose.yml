@@ -16,7 +16,7 @@ services:
     networks:
       - deaipro_network
     healthcheck:
-      test: ['CMD', 'mongosh', 'localhost:27017/test', '-u', '${MONGODB_USER:-root}', '-p', '${MONGODB_PASSWORD:-password}']
+      test: ['CMD', 'mongosh', 'localhost:27017/admin', '-u', '${MONGODB_USER:-root}', '-p', '${MONGODB_PASSWORD:-password}', '--authenticationDatabase', 'admin', '--eval', 'db.runCommand({ping:1})']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -77,7 +77,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    command: npm run dev
+    command: npm run dev -- --port 3000 --host
 
 volumes:
   mongo_data:
