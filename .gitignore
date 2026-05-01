@@ -10,6 +10,8 @@ backend/.env
 frontend/.env
 serviceAccountKey.json
 firebase-key.json
+firebase-service-account.json
+backend/firebase-service-account.json
 
 # ============================================================================
 # PYTHON
