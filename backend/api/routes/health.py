@@ -1,6 +1,6 @@
 """Health check and sync status endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -20,7 +20,7 @@ router = APIRouter()
     summary="System health check",
 )
 @limiter.limit("100/minute")
-async def health_check():
+async def health_check(request: Request):
     """
     Check system health and sync status.
     
@@ -52,7 +52,7 @@ async def health_check():
     summary="Get specific service status",
 )
 @limiter.limit("100/minute")
-async def get_service_status(service_name: str):
+async def get_service_status(request: Request, service_name: str):
     """
     Get status for a specific background service.
     
@@ -97,7 +97,7 @@ async def get_service_status(service_name: str):
     summary="Get scheduled background jobs",
 )
 @limiter.limit("100/minute")
-async def get_scheduled_jobs():
+async def get_scheduled_jobs(request: Request):
     """
     Get list of all scheduled background jobs.
     
