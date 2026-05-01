@@ -15,7 +15,7 @@ import logging
 from functools import partial
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from firebase_admin import auth as firebase_auth
 from pydantic import BaseModel
 
@@ -63,7 +63,7 @@ async def verify_token(token: str) -> Optional[dict]:
 
 
 async def get_current_user(
-    authorization: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
 ) -> CurrentUser:
     """Dependency: any valid Firebase user.
 

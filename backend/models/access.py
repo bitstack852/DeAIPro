@@ -23,6 +23,10 @@ class TemporaryAccess(Document):
     accessed_at: Optional[datetime] = None
     request_count: int = 0  # How many requests made with this token
     
+    # Approval (set by admin via /api/admin/approve-access)
+    approved: bool = False
+    approved_at: Optional[datetime] = None
+
     # Revocation
     revoked: bool = False
     revoked_at: Optional[datetime] = None
