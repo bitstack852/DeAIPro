@@ -57,7 +57,7 @@ class _TokenVerificationCredential(_google_creds.Credentials):
         pass  # Do not add auth headers to public cert requests
 
 
-class _NoAuthFirebaseCredential:
+class _NoAuthFirebaseCredential(credentials.Base):
     """Firebase Admin credential wrapper for token-verification-only mode."""
 
     def get_credential(self):
