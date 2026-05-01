@@ -249,3 +249,49 @@ export const fetchAllAuthenticatedData = async (token: string) => {
     detailedSubnets,
   };
 };
+
+// ── Admin Config ──────────────────────────────────────────────────────────────
+
+export interface ConfigEntry {
+  key: string;
+  label: string;
+  value: string;
+  is_secret: boolean;
+  category: string;
+  updated_at: string | null;
+  updated_by: string | null;
+}
+
+export type ConfigGroups = Record<string, ConfigEntry[]>;
+
+export const getAdminConfig = async (token: string): Promise<ConfigGroups> => {
+  const response = await fetch(`${API_BASE_URL}/admin/config`, {
+    headers: { ...DEFAULT_HEADERS, ...getAuthHeader(token) },
+  });
+  const json = await handleResponse(response);
+  return json?.data ?? {};
+};
+
+export const updateAdminConfig = async (
+  key: string,
+  value: string,
+  token: string
+): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/admin/config`, {
+    method: "PUT",
+    headers: { ...DEFAULT_HEADERS, ...getAuthHeader(token) },
+    body: JSON.stringify({ key, value }),
+  });
+  await handleResponse(response);
+};
+
+export const testAdminConfig = async (
+  service: "taostats" | "coingecko" | "github" | "sendgrid",
+  token: string
+): Promise<{ ok: boolean; latency_ms: number | null; detail: string }> => {
+  const response = await fetch(`${API_BASE_URL}/admin/config/test/${service}`, {
+    method: "POST",
+    headers: { ...DEFAULT_HEADERS, ...getAuthHeader(token) },
+  });
+  return handleResponse(response);
+};

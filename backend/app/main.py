@@ -114,7 +114,14 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to connect to database: {e}")
         raise
-    
+
+    # Seed runtime config from env vars (no-op if already seeded)
+    try:
+        from services.config_service import config_service
+        await config_service.seed_defaults()
+    except Exception as e:
+        logger.warning(f"Config seeding failed (non-fatal): {e}")
+
     # Start background scheduler
     try:
         await scheduler.start()

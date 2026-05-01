@@ -34,9 +34,15 @@ class MetagraphService(BaseService):
 
     async def run(self) -> None:
         """Fetch and update subnet metagraph data from TaoStats."""
+        from services.config_service import config_service
+        if not await config_service.get_bool("METAGRAPH_SYNC_ENABLED", fallback=True):
+            logger.info("metagraph_sync_disabled")
+            return
+        self.taostats_api_key = await config_service.get("TAOSTATS_API_KEY") or self.taostats_api_key
+
         start_time = datetime.utcnow()
         records_updated = 0
-        
+
         try:
             await self.update_sync_state(SyncStatus.RUNNING)
             await self.log_sync("metagraph_sync_started")

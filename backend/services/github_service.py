@@ -33,6 +33,12 @@ class GitHubService(BaseService):
 
     async def run(self) -> None:
         """Fetch GitHub metrics for all subnets."""
+        from services.config_service import config_service
+        if not await config_service.get_bool("GITHUB_SYNC_ENABLED", fallback=True):
+            logger.info("github_sync_disabled")
+            return
+        self.github_api_token = await config_service.get("GITHUB_API_TOKEN") or self.github_api_token
+
         start_time = datetime.utcnow()
         records_updated = 0
 
