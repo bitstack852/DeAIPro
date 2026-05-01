@@ -46,11 +46,20 @@ async def verify_token(token: str) -> Optional[dict]:
             None, partial(firebase_auth.verify_id_token, token)
         )
         return decoded_token
-    except firebase_auth.InvalidIdTokenError as e:
-        logger.warning(f"Token verification failed — InvalidIdToken: {e}")
-        return None
     except firebase_auth.ExpiredIdTokenError as e:
         logger.warning(f"Token verification failed — ExpiredIdToken: {e}")
+        return None
+    except firebase_auth.RevokedIdTokenError as e:
+        logger.warning(f"Token verification failed — RevokedIdToken: {e}")
+        return None
+    except firebase_auth.CertificateFetchError as e:
+        logger.error(f"Token verification failed — CertificateFetchError (network issue?): {e}")
+        return None
+    except firebase_auth.InvalidIdTokenError as e:
+        logger.warning(f"Token verification failed — {type(e).__name__}: {e}")
+        return None
+    except ValueError as e:
+        logger.warning(f"Token verification failed — ValueError: {e}")
         return None
     except Exception as e:
         logger.error(f"Token verification error — {type(e).__name__}: {e}")
