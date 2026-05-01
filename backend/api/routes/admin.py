@@ -23,6 +23,54 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 limiter = Limiter(key_func=get_remote_address)
 
 
+@router.get("/auth-debug")
+async def auth_debug(request: Request):
+    """
+    Diagnostic endpoint — returns raw token verification result.
+    No auth guard. Remove once 401 issue is resolved.
+    """
+    import firebase_admin
+    from firebase_admin import auth as fa
+    from functools import partial
+    import asyncio
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return {"error": "No Bearer token in Authorization header"}
+
+    token = auth_header[7:]
+    token_preview = token[:20] + "..."
+
+    apps_initialized = bool(firebase_admin._apps)
+    project_id = None
+    if apps_initialized:
+        app = firebase_admin.get_app()
+        project_id = app.project_id
+
+    try:
+        loop = asyncio.get_event_loop()
+        decoded = await loop.run_in_executor(
+            None, partial(fa.verify_id_token, token)
+        )
+        return {
+            "ok": True,
+            "token_preview": token_preview,
+            "firebase_apps_initialized": apps_initialized,
+            "project_id": project_id,
+            "uid": decoded.get("uid"),
+            "email": decoded.get("email"),
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "token_preview": token_preview,
+            "firebase_apps_initialized": apps_initialized,
+            "project_id": project_id,
+            "error_type": type(e).__name__,
+            "error": str(e),
+        }
+
+
 class ApproveAccessRequest(BaseModel):
     email: EmailStr
     extend_hours: Optional[int] = None  # Optional TTL extension on approval
