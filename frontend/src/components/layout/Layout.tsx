@@ -48,75 +48,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
         flexShrink: 0,
       }}
     >
-      {/* Logo + toggle */}
+      {/* Logo */}
       <div
         style={{
           height: 56,
           display: "flex",
           alignItems: "center",
-          padding: "0 12px",
+          padding: "0 16px",
           borderBottom: "1px solid var(--border)",
-          gap: 8,
+          gap: 10,
           flexShrink: 0,
-          justifyContent: expanded ? "space-between" : "center",
+          justifyContent: expanded ? "flex-start" : "center",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <svg width="28" height="28" viewBox="0 0 18 18" fill="none" style={{ flexShrink: 0 }}>
-            <polygon
-              points="9,1.5 16.5,5.5 16.5,12.5 9,16.5 1.5,12.5 1.5,5.5"
-              stroke="var(--accent-light)"
-              strokeWidth="1.5"
-              fill="none"
-            />
-            <circle cx="9" cy="9" r="2.4" fill="var(--accent)" />
-          </svg>
-          {expanded && (
-            <span
-              style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: "var(--text)",
-                whiteSpace: "nowrap",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              DeAIPro
-            </span>
-          )}
-        </div>
-
-        {/* Hamburger toggle — always visible */}
-        <button
-          onClick={onToggle}
-          title={expanded ? "Collapse sidebar" : "Expand sidebar"}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            border: "1px solid var(--border)",
-            background: "var(--surface-2)",
-            color: "var(--text-muted)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            flexShrink: 0,
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--text)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
-        >
-          {expanded ? (
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 4h10M2 7h10M2 10h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 4h10M2 7h10M2 10h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          )}
-        </button>
+        <svg width="28" height="28" viewBox="0 0 18 18" fill="none" style={{ flexShrink: 0 }}>
+          <polygon
+            points="9,1.5 16.5,5.5 16.5,12.5 9,16.5 1.5,12.5 1.5,5.5"
+            stroke="var(--accent-light)"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <circle cx="9" cy="9" r="2.4" fill="var(--accent)" />
+        </svg>
+        {expanded && (
+          <span
+            style={{
+              fontSize: 15,
+              fontWeight: 700,
+              color: "var(--text)",
+              whiteSpace: "nowrap",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            DeAIPro
+          </span>
+        )}
       </div>
 
       {/* Nav items */}
@@ -185,9 +151,10 @@ interface AppHeaderProps {
   title: string;
   user?: { email?: string | null } | null;
   onSignOut?: () => void;
+  onMenuToggle?: () => void;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ title, user, onSignOut }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ title, user, onSignOut, onMenuToggle }) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -206,17 +173,46 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ title, user, onSignOut }) 
         flexShrink: 0,
       }}
     >
-      <h1
-        style={{
-          fontSize: 15,
-          fontWeight: 600,
-          color: "var(--text)",
-          margin: 0,
-          letterSpacing: "-0.01em",
-        }}
-      >
-        {title}
-      </h1>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Hamburger toggle */}
+        {onMenuToggle && (
+          <button
+            onClick={onMenuToggle}
+            title="Toggle sidebar"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              border: "1px solid var(--border)",
+              background: "var(--surface-2)",
+              color: "var(--text-muted)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--text)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 4h10M2 7h10M2 10h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
+        <h1
+          style={{
+            fontSize: 15,
+            fontWeight: 600,
+            color: "var(--text)",
+            margin: 0,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {title}
+        </h1>
+      </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {/* Theme toggle */}

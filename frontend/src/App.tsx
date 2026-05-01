@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const APP_VERSION = "2026-05-01.8";
+const APP_VERSION = "2026-05-01.9";
 console.log(`[DeAIPro] version ${APP_VERSION} loaded`);
 
 import { DataProvider, useData } from "./contexts/DataContext";
@@ -117,6 +117,7 @@ const AppLayout: React.FC<{ currentPage: PageType; onPageChange: (p: PageType) =
           title={PAGE_TITLES[currentPage]}
           user={state.user}
           onSignOut={() => auth && signOut(auth)}
+          onMenuToggle={() => setSidebarExpanded(x => !x)}
         />
         <main style={{ flex: 1, overflowY: "auto" }} className="animate-fadeIn">
           {renderPage()}
