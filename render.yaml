@@ -1,20 +1,62 @@
 services:
-  # Backend
+  # ── Backend API ──────────────────────────────────────────────────────────────
   - type: web
     name: deai-backend
     runtime: python
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.12.0
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false  # Set in Render dashboard — MongoDB Atlas connection string
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        sync: false  # Path or JSON contents of Firebase service account
+      - key: TAOSTATS_API_KEY
+        sync: false
+      - key: TAOSTATS_API_URL
+        value: https://api.taostats.io
+      - key: TAOMARKETCAP_API_URL
+        value: https://api.taomarketcap.com
+      - key: GITHUB_API_TOKEN
+        sync: false  # Optional — higher rate limits
+      - key: SENTRY_DSN_BACKEND
+        sync: false  # Optional — error tracking
+      - key: BACKEND_CORS_ORIGINS
+        sync: false  # e.g. https://your-app.vercel.app
+      - key: RATE_LIMIT_ENABLED
+        value: "true"
+      - key: REDIS_URL
+        sync: false  # Optional — Phase 5 caching
 
-  # Frontend
+  # ── Frontend ─────────────────────────────────────────────────────────────────
   - type: web
     name: deai-frontend
     runtime: node
-    buildCommand: cd frontend && npm install && npm run build
-    startCommand: cd frontend && npm run preview
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview -- --host 0.0.0.0 --port $PORT
     envVars:
       - key: NODE_VERSION
         value: 20.12.0
+      - key: VITE_API_URL
+        sync: false  # Set to your deai-backend Render URL
+      - key: VITE_FIREBASE_API_KEY
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        sync: false
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        sync: false
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        sync: false
+      - key: VITE_SENTRY_DSN
+        sync: false  # Optional

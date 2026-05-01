@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-root}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-password}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:?MONGODB_PASSWORD must be set in .env}
       MONGO_INITDB_DATABASE: deaipro
     ports:
       - "${MONGODB_PORT:-27017}:27017"
@@ -16,7 +16,7 @@ services:
     networks:
       - deaipro_network
     healthcheck:
-      test: ['CMD', 'mongosh', 'localhost:27017/admin', '-u', '${MONGODB_USER:-root}', '-p', '${MONGODB_PASSWORD:-password}', '--authenticationDatabase', 'admin', '--eval', 'db.runCommand({ping:1})']
+      test: ['CMD', 'mongosh', 'localhost:27017/admin', '-u', '${MONGODB_USER:-root}', '-p', '${MONGODB_PASSWORD}', '--authenticationDatabase', 'admin', '--eval', 'db.runCommand({ping:1})']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,7 +28,7 @@ services:
     container_name: deaipro_backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: mongodb://${MONGODB_USER:-root}:${MONGODB_PASSWORD:-password}@mongodb:27017/deaipro?authSource=admin
+      DATABASE_URL: mongodb://${MONGODB_USER:-root}:${MONGODB_PASSWORD}@mongodb:27017/deaipro?authSource=admin
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       TAOSTATS_API_KEY: ${TAOSTATS_API_KEY}
       TAOSTATS_API_URL: ${TAOSTATS_API_URL:-https://api.taostats.io}
@@ -59,9 +59,9 @@ services:
     container_name: deaipro_frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: http://backend:8000
-      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
-      NEXT_PUBLIC_ENVIRONMENT: ${ENVIRONMENT:-development}
+      VITE_API_URL: http://backend:8000
+      VITE_SENTRY_DSN: ${VITE_SENTRY_DSN}
+      VITE_ENVIRONMENT: ${ENVIRONMENT:-development}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     volumes:
